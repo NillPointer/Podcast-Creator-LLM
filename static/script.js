@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const selectedFilesContainer = document.getElementById('selectedFiles');
   const podcastListContainer = document.getElementById('podcastListContainer');
   const podcastList = document.getElementById('podcastList');
+  const arxivUrlsContainer = document.getElementById('arxivUrlsContainer');
 
   // Keep track of selected files
   let selectedFiles = [];
@@ -118,6 +119,38 @@ document.addEventListener('DOMContentLoaded', function () {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
+  // Arxiv URL input field management
+  function updateArxivUrlsUI() {
+    const urlInputs = arxivUrlsContainer.querySelectorAll('.arxiv-url');
+    const nonEmptyUrls = Array.from(urlInputs).filter(input => input.value.trim() !== '');
+
+    // If all inputs have non-whitespace text, add another input
+    if (nonEmptyUrls.length === urlInputs.length && urlInputs.length > 0) {
+      addArxivUrlInput();
+    }
+
+    // If there are 2 or more empty inputs, remove the last one
+    const emptyUrls = Array.from(urlInputs).filter(input => input.value.trim() === '');
+    if (emptyUrls.length >= 2) {
+      emptyUrls[emptyUrls.length - 1].parentElement.remove();
+    }
+  }
+
+  function addArxivUrlInput() {
+    const urlGroup = document.createElement('div');
+    urlGroup.className = 'url-input-group';
+    urlGroup.innerHTML = `
+      <input type="text" class="arxiv-url" name="arxiv_urls" placeholder="" value="">
+    `;
+    arxivUrlsContainer.appendChild(urlGroup);
+
+    // Add event listener to the new input
+    urlGroup.querySelector('.arxiv-url').addEventListener('input', updateArxivUrlsUI);
+  }
+
+  // Initialize URL input field management
+  arxivUrlsContainer.querySelector('.arxiv-url').addEventListener('input', updateArxivUrlsUI);
+
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
@@ -134,6 +167,18 @@ document.addEventListener('DOMContentLoaded', function () {
     // Append all selected files
     selectedFiles.forEach(file => {
       formData.append('files', file);
+    });
+
+    // Append Arxiv URLs
+    const arxivUrls = [];
+    document.querySelectorAll('.arxiv-url').forEach(input => {
+      const url = input.value.trim();
+      if (url) {
+        arxivUrls.push(url);
+      }
+    });
+    arxivUrls.forEach(url => {
+      formData.append('arxiv_urls', url);
     });
 
     // Append other form fields
@@ -168,9 +213,9 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   async function monitorProgress(jobId) {
-    const MAX_POLL_ATTEMPTS = 180; // 3 minute max polling time per status
+    const MAX_POLL_ATTEMPTS = 36; // 3 minute max polling time per status
     let pollAttempts = 0;
-    const POLL_INTERVAL = 1000; // 1 second between polls
+    const POLL_INTERVAL = 5000; // 5 second between polls
 
     // Store previous status to detect changes
     let previousStatus = null;

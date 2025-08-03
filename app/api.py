@@ -1,13 +1,13 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Path
+from fastapi import APIRouter, UploadFile, File, HTTPException, Path, Form
 from fastapi.responses import FileResponse
 import uuid
 import os
 import tempfile
-from typing import Dict, List
+from typing import Dict, List, Optional
 from io import BytesIO
 import threading
 from datetime import datetime
-from app.pdf_processor import extract_text_from_pdf, validate_pdf_file
+from app.pdf_processor import PDFProcessor
 from app.llm_client import LLMClient
 from app.tts_client import TTSClient
 from app.audio_stitcher import AudioStitcher
@@ -24,49 +24,63 @@ jobs = {}
 
 @router.post("/podcasts")
 async def create_podcast(
-    files: List[UploadFile] = File(...),
+    files: Optional[List[UploadFile]] = File(None),
+    arxiv_urls: Optional[List[str]] = Form(None),
     speaker_a_voice: str = settings.HOST_A_NAME,
     speaker_b_voice: str = settings.HOST_B_NAME,
 ):
     """
-    Upload PDF files and initiate podcast generation.
+    Upload PDF files and Arxiv URLs to initiate podcast generation.
 
     Args:
         files: List of PDF files to process
+        arxiv_urls: List of Arxiv URLs to process
         speaker_a_voice: Voice ID for speaker A
         speaker_b_voice: Voice ID for speaker B
 
     Returns:
         Job information with status
     """
-    # Validate that at least one file is provided
-    if not files:
-        logger.warning("No files provided")
-        raise HTTPException(status_code=400, detail="At least one PDF file is required")
+    # Validate that at least one file or URL is provided
+    if not files and not arxiv_urls:
+        logger.warning("No files or URLs provided")
+        raise HTTPException(status_code=400, detail="At least one PDF file or Arxiv URL is required")
 
     # Read and validate all files
     file_contents = []
-    for file in files:
-        # Validate file size
-        if file.size > settings.MAX_FILE_SIZE:
-            logger.warning(f"File too large: {file.size} bytes > {settings.MAX_FILE_SIZE} bytes")
-            raise HTTPException(status_code=413, detail="File too large")
+    if files:
+        for file in files:
+            # Validate file size
+            if file.size > settings.MAX_FILE_SIZE:
+                logger.warning(f"File too large: {file.size} bytes > {settings.MAX_FILE_SIZE} bytes")
+                raise HTTPException(status_code=413, detail="File too large")
 
-        # Validate file type
-        if file.content_type != "application/pdf":
-            logger.warning(f"Invalid file type: {file.content_type}")
-            raise HTTPException(status_code=400, detail="Only PDF files are supported")
+            # Validate file type
+            if file.content_type != "application/pdf":
+                logger.warning(f"Invalid file type: {file.content_type}")
+                raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
-        # Read file content
-        content = await file.read()
-        logger.debug(f"Successfully read file content. Size: {len(content)} bytes")
+            # Read file content
+            content = await file.read()
+            logger.debug(f"Successfully read file content. Size: {len(content)} bytes")
 
-        # Validate PDF
-        if not validate_pdf_file(content):
-            logger.warning("Invalid PDF file detected")
-            raise HTTPException(status_code=400, detail="Invalid PDF file")
+            # Validate PDF
+            if not validate_pdf_file(content):
+                logger.warning("Invalid PDF file detected")
+                raise HTTPException(status_code=400, detail="Invalid PDF file")
 
-        file_contents.append(content)
+            file_contents.append(content)
+
+    # Validate Arxiv URLs
+    valid_arxiv_urls = []
+    if arxiv_urls:
+        for url in arxiv_urls:
+            if not url.strip():
+                continue
+            if not url.startswith("https://arxiv.org/pdf/"):
+                logger.warning(f"Invalid Arxiv URL format: {url}")
+                raise HTTPException(status_code=400, detail="Only Arxiv PDF URLs are supported")
+            valid_arxiv_urls.append(url.strip())
 
     # Create job ID
     job_id = str(uuid.uuid4())
@@ -84,7 +98,7 @@ async def create_podcast(
     # Start processing in a new thread
     threading.Thread(
         target=process_podcast_job,
-        args=(job_id, file_contents, speaker_a_voice, speaker_b_voice),
+        args=(job_id, file_contents, valid_arxiv_urls, speaker_a_voice, speaker_b_voice),
         daemon=True
     ).start()
 
@@ -117,7 +131,7 @@ async def get_podcast_status(job_id: str):
         "job_id": job_id,
         "status": job_info["status"],
         "progress": job_info["progress"],
-        "result_url": job_info["result_file"] if job_info["result_file"] else None
+        "result_file": job_info["result_file"] if job_info["result_file"] else None
     }
 
 @router.get("/podcasts/download/{filename}")
@@ -186,14 +200,15 @@ async def list_podcasts():
         logger.error(f"Error listing podcasts: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Error listing podcasts")
 
-def process_podcast_job(job_id: str, file_contents: List[bytes],
+def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: List[str],
                       speaker_a_voice: str, speaker_b_voice: str):
     """
-    Background task to process podcast generation for multiple PDFs.
+    Background task to process podcast generation for PDFs and Arxiv URLs.
 
     Args:
         job_id: Unique identifier for the job
         file_contents: List of PDF file contents
+        arxiv_urls: List of Arxiv URLs
         speaker_a_voice: Voice ID for speaker A
         speaker_b_voice: Voice ID for speaker B
     """
@@ -204,36 +219,53 @@ def process_podcast_job(job_id: str, file_contents: List[bytes],
             jobs[job_id]["status"] = "processing"
             jobs[job_id]["progress"] = 5  # Initial progress
 
-            total_pdfs = len(file_contents)
-            all_audio_files = []  # Will store all audio segments from all PDFs
+            total_sources = len(file_contents) + len(arxiv_urls)
+            if total_sources == 0:
+                jobs[job_id]["status"] = "failed"
+                raise ValueError("No valid sources provided for processing")
 
-            # Step 1: Extract text from all PDFs
-            logger.info(f"Extracting text from all {total_pdfs} PDFs for job: {job_id}")
+            all_audio_files = []  # Will store all audio segments from all sources
+
+            # Initialize PDF processor
+            pdf_processor = PDFProcessor()
+
+            # Step 1: Extract text from all PDFs and Arxiv URLs
+            logger.info(f"Extracting text from all {total_sources} sources for job: {job_id}")
             text_contents = []
-            progress_increment = 15 / total_pdfs
+            progress_increment = 15 / total_sources
+
+            # Process PDF files
             for index, file_content in enumerate(file_contents):
                 file_stream = BytesIO(file_content)
-                logger.debug(f"Extracting text from PDF {index + 1}/{total_pdfs} for job: {job_id}")
-                text_content = extract_text_from_pdf(file_stream)
-                logger.debug(f"Successfully extracted text from PDF {index + 1}/{total_pdfs} for job: {job_id}")
+                logger.debug(f"Extracting text from PDF {index + 1}/{total_sources} for job: {job_id}")
+                text_content = pdf_processor.extract_text_from_pdf(file_stream)
+                logger.debug(f"Successfully extracted text from PDF {index + 1}/{total_sources} for job: {job_id}")
                 text_contents.append(text_content)
                 jobs[job_id]["progress"] += progress_increment
 
-            # Step 2: Generate podcast scripts with LLM for all PDFs
-            logger.info(f"Generating podcast scripts for all {total_pdfs} PDFs for job: {job_id}")
+            # Process Arxiv URLs
+            for index, url in enumerate(arxiv_urls, start=len(file_contents)):
+                logger.debug(f"Extracting text from Arxiv URL {index + 1}/{total_sources} for job: {job_id}")
+                text_content = pdf_processor.extract_text_from_arxiv(url)
+                logger.debug(f"Successfully extracted text from Arxiv URL {index + 1}/{total_sources} for job: {job_id}")
+                text_contents.append(text_content)
+                jobs[job_id]["progress"] += progress_increment
+
+            # Step 2: Generate podcast scripts with LLM for all sources
+            logger.info(f"Generating podcast scripts for all {total_sources} sources for job: {job_id}")
             all_dialogues = []
             llm_client = LLMClient()
-            progress_increment = 30 / total_pdfs
+            progress_increment = 30 / total_sources
             for index, text_content in enumerate(text_contents):
                 # Set intro/outro based on position
                 intro = False
                 outro = False
-                if index == 0:  # First PDF
+                if index == 0:  # First source
                     intro = True
-                elif index == total_pdfs - 1:  # Last PDF
+                elif index == total_sources - 1:  # Last source
                     outro = True
 
-                logger.debug(f"Generating script for PDF {index + 1}/{total_pdfs} for job: {job_id}")
+                logger.debug(f"Generating script for source {index + 1}/{total_sources} for job: {job_id}")
                 dialogue = llm_client.generate_podcast_script(
                     text_content,
                     speaker_a_voice,
@@ -241,16 +273,16 @@ def process_podcast_job(job_id: str, file_contents: List[bytes],
                     intro,
                     outro,
                     tmpdirname)
-                logger.debug(f"Successfully generated script for PDF {index + 1}/{total_pdfs} for job: {job_id}")
+                logger.debug(f"Successfully generated script for source {index + 1}/{total_sources} for job: {job_id}")
                 all_dialogues.append(dialogue)
                 jobs[job_id]["progress"] += progress_increment
 
-            # Step 3: Generate audio segments with TTS for all PDFs
-            logger.info(f"Generating audio segments for all {total_pdfs} PDFs for job: {job_id}")
+            # Step 3: Generate audio segments with TTS for all sources
+            logger.info(f"Generating audio segments for all {total_sources} sources for job: {job_id}")
             tts_client = TTSClient()
-            progress_increment = 30 / total_pdfs
+            progress_increment = 30 / total_sources
             for index, dialogue in enumerate(all_dialogues):
-                logger.debug(f"Generating audio for PDF {index + 1}/{total_pdfs} for job: {job_id}")
+                logger.debug(f"Generating audio for source {index + 1}/{total_sources} for job: {job_id}")
                 audio_files = tts_client.generate_audio_segments(
                     dialogue,
                     index,
@@ -258,20 +290,21 @@ def process_podcast_job(job_id: str, file_contents: List[bytes],
                     speaker_b_voice,
                     tmpdirname
                 )
-                logger.debug(f"Successfully generated audio for PDF {index + 1}/{total_pdfs} for job: {job_id}")
+                logger.debug(f"Successfully generated audio for source {index + 1}/{total_sources} for job: {job_id}")
                 all_audio_files.extend(audio_files)
                 jobs[job_id]["progress"] += progress_increment
 
             # Step 4: Stitch all audio segments into final output
             logger.info(f"Stitching all audio segments for job: {job_id}")
             stitcher = AudioStitcher()
+            output_filename = f"podcast_{job_id}.mp3"
             output_file = stitcher.stitch_audio_segments(
-                all_audio_files, f"podcast_{job_id}.mp3"
+                all_audio_files, output_filename
             )
             logger.info(f"Successfully stitched all audio segments for job: {job_id}")
 
             # Update job status
-            jobs[job_id]["result_file"] = output_file
+            jobs[job_id]["result_file"] = output_filename
             jobs[job_id]["status"] = "completed"
             jobs[job_id]["progress"] = 100
             logger.info(f"Job completed successfully: {job_id}")
