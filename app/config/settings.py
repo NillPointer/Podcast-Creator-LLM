@@ -6,7 +6,7 @@ class Settings:
     ALLOWED_ORIGINS: List[str] = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
     # Podcast Settings
-    HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Alex")
+    HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Jeremiah")
     HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Eli")
     INTRO_ENABLED: str = os.getenv("INTRO_ENABLED", "true")
     OUTRO_ENABLED: str = os.getenv("OUTRO_ENABLED", "true")
