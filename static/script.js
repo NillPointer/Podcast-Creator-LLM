@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const dropArea = document.getElementById('dropArea');
   const pdfFilesInput = document.getElementById('pdfFiles');
   const selectedFilesContainer = document.getElementById('selectedFiles');
+  const podcastListContainer = document.getElementById('podcastListContainer');
+  const podcastList = document.getElementById('podcastList');
 
   // Keep track of selected files
   let selectedFiles = [];
@@ -87,10 +89,10 @@ document.addEventListener('DOMContentLoaded', function () {
       const fileElement = document.createElement('div');
       fileElement.className = 'selected-file';
       fileElement.innerHTML = `
-        <span class="file-name">${file.name}</span>
-        <span class="file-size">(${formatFileSize(file.size)})</span>
-        <button class="remove-file" data-index="${index}">×</button>
-      `;
+          <span class="file-name">${file.name}</span>
+          <span class="file-size">(${formatFileSize(file.size)})</span>
+          <button class="remove-file" data-index="${index}">×</button>
+        `;
       selectedFilesContainer.appendChild(fileElement);
     });
 
@@ -175,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     while (pollAttempts < MAX_POLL_ATTEMPTS) {
       try {
-        const response = await fetch(`/api/v1/podcasts/${jobId}`);
+        const response = await fetch(`/api/v1/podcasts/status/${jobId}`);
         const result = await response.json();
 
         if (!response.ok) {
@@ -194,11 +196,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (result.status === 'completed') {
           // Show download link
-          downloadLink.href = `/api/v1/podcasts/${jobId}/download`;
+          downloadLink.href = `/api/v1/podcasts/download/${result.result_file}`;
           resultContainer.style.display = 'block';
           progressContainer.style.display = 'none';
           submitBtn.disabled = false;
           submitBtn.textContent = 'Create Podcast';
+          await fetchPodcastList();
           break;
         } else if (result.status === 'failed') {
           throw new Error(result.error || 'Processing failed');
@@ -270,4 +273,72 @@ document.addEventListener('DOMContentLoaded', function () {
       statusMessage.style.display = 'block';
     }
   }
+
+  // Function to format file size for display
+  function formatFileSizeForDisplay(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  // Function to format date for display
+  function formatDateForDisplay(dateString) {
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  }
+
+  // Function to fetch and display podcast list
+  async function fetchPodcastList() {
+    try {
+      const response = await fetch('/api/v1/podcasts');
+      const podcasts = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch podcast list');
+      }
+
+      displayPodcastList(podcasts);
+    } catch (error) {
+      console.error('Error fetching podcast list:', error);
+      podcastListContainer.style.display = 'block';
+      podcastList.innerHTML = '<p class="error">Failed to load podcast list. Please try again later.</p>';
+    }
+  }
+
+  // Function to display podcast list
+  function displayPodcastList(podcasts) {
+    podcastList.innerHTML = '';
+
+    if (podcasts.length === 0) {
+      podcastList.innerHTML = '<p class="no-podcasts">No podcasts available. Create one by uploading PDF files.</p>';
+      return;
+    }
+
+    podcasts.forEach(podcast => {
+      const podcastItem = document.createElement('div');
+      podcastItem.className = 'podcast-item';
+
+      podcastItem.innerHTML = `
+          <div class="podcast-info">
+            <div class="podcast-name">${podcast.filename}</div>
+            <div class="podcast-details">
+              <span class="podcast-size">${formatFileSizeForDisplay(podcast.size)}</span>
+              <span class="podcast-date">${formatDateForDisplay(podcast.created_at)}</span>
+            </div>
+          </div>
+          <a class="podcast-download" href="/api/v1/podcasts/download/${encodeURIComponent(podcast.filename)}" download>
+            <i class="download-icon">⬇</i> Download
+          </a>
+        `;
+
+      podcastList.appendChild(podcastItem);
+    });
+
+    podcastListContainer.style.display = 'block';
+  }
+
+  // Initial fetch of podcast list when page loads
+  fetchPodcastList();
 });

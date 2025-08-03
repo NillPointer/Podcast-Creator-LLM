@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Path
 from fastapi.responses import FileResponse
 import uuid
 import os
@@ -6,6 +6,7 @@ import tempfile
 from typing import Dict, List
 from io import BytesIO
 import threading
+from datetime import datetime
 from app.pdf_processor import extract_text_from_pdf, validate_pdf_file
 from app.llm_client import LLMClient
 from app.tts_client import TTSClient
@@ -72,7 +73,6 @@ async def create_podcast(
     logger.info(f"Created new job: {job_id}")
 
     # Store job info
-    from datetime import datetime
     jobs[job_id] = {
         "status": "processing",
         "progress": 0,
@@ -96,7 +96,7 @@ async def create_podcast(
         "created_at": jobs[job_id]["created_at"]
     }
 
-@router.get("/podcasts/{job_id}")
+@router.get("/podcasts/status/{job_id}")
 async def get_podcast_status(job_id: str):
     """
     Get the status of a podcast generation job.
@@ -120,60 +120,71 @@ async def get_podcast_status(job_id: str):
         "result_url": job_info["result_file"] if job_info["result_file"] else None
     }
 
-@router.get("/podcasts/{job_id}/download")
-async def download_podcast(job_id: str):
+@router.get("/podcasts/download/{filename}")
+async def download_podcast(filename: str = Path(..., title="Filename of the podcast to download")):
     """
     Download the generated podcast file.
 
     Args:
-        job_id: Unique identifier for the job
+        filename: Filename of the podcast to download
 
     Returns:
         MP3 file response
     """
-    if job_id not in jobs:
-        logger.warning(f"Job not found during download: {job_id}")
-        raise HTTPException(status_code=404, detail="Job not found")
+    # Construct the full path
+    file_path = os.path.join(settings.AUDIO_STORAGE_PATH, filename)
 
-    job_info = jobs[job_id]
+    if not os.path.exists(file_path):
+        logger.warning(f"File not found: {file_path}")
+        raise HTTPException(status_code=404, detail="File not found")
 
-    if job_info["status"] != "completed":
-        logger.warning(f"Attempt to download incomplete job: {job_id} (status: {job_info['status']})")
-        raise HTTPException(status_code=400, detail="Podcast not ready for download")
-
-    if not job_info["result_file"]:
-        logger.warning(f"Result file missing for job: {job_id}")
-        raise HTTPException(status_code=404, detail="Result file not found")
-
-    if not os.path.exists(job_info["result_file"]):
-        logger.warning(f"Result file not found on disk: {job_info['result_file']}")
-        raise HTTPException(status_code=404, detail="Result file not found")
-
-    logger.info(f"Initiating download for completed job: {job_id}")
+    logger.info(f"Initiating download for file: {filename}")
     return FileResponse(
-        job_info["result_file"],
+        file_path,
         media_type="audio/mpeg",
-        filename=f"podcast_{job_id}.mp3"
+        filename=filename
     )
 
 @router.get("/podcasts")
 async def list_podcasts():
     """
-    List all podcast generation jobs.
+    List all generated podcasts.
 
     Returns:
-        List of job information
+        List of podcast information including name, size, and creation date
     """
-    logger.debug("Listing all podcast jobs")
-    return [
-        {
-            "job_id": job_id,
-            "status": job_info["status"],
-            "created_at": job_info["created_at"],
-            "updated_at": job_info["updated_at"]
-        }
-        for job_id, job_info in jobs.items()
-    ]
+    logger.debug("Listing all podcast files")
+
+    podcasts = []
+    try:
+        # Scan the audio storage directory
+        if not os.path.exists(settings.AUDIO_STORAGE_PATH):
+            logger.warning(f"Audio storage path does not exist: {settings.AUDIO_STORAGE_PATH}")
+            return []
+
+        for filename in os.listdir(settings.AUDIO_STORAGE_PATH):
+            file_path = os.path.join(settings.AUDIO_STORAGE_PATH, filename)
+
+            # Skip non-files and non-mp3 files
+            if not os.path.isfile(file_path) or not filename.lower().endswith('.mp3'):
+                continue
+
+            # Get file stats
+            file_stat = os.stat(file_path)
+            file_size = file_stat.st_size
+            created_at = datetime.fromtimestamp(file_stat.st_ctime).isoformat()
+
+            podcasts.append({
+                "filename": filename,
+                "size": file_size,
+                "created_at": created_at
+            })
+
+        return podcasts
+
+    except Exception as e:
+        logger.error(f"Error listing podcasts: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error listing podcasts")
 
 def process_podcast_job(job_id: str, file_contents: List[bytes],
                       speaker_a_voice: str, speaker_b_voice: str):
@@ -260,8 +271,8 @@ def process_podcast_job(job_id: str, file_contents: List[bytes],
             logger.info(f"Successfully stitched all audio segments for job: {job_id}")
 
             # Update job status
-            jobs[job_id]["status"] = "completed"
             jobs[job_id]["result_file"] = output_file
+            jobs[job_id]["status"] = "completed"
             jobs[job_id]["progress"] = 100
             logger.info(f"Job completed successfully: {job_id}")
 

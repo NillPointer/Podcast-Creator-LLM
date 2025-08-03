@@ -52,17 +52,5 @@ def validate_pdf_file(file_content: bytes) -> bool:
         if not file_content.startswith(b'%PDF'):
             return False
 
-        # Try to read with PyPDF2 to verify
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.pdf', delete=False) as tmp:
-            tmp.write(file_content)
-            tmp_path = tmp.name
-
-        try:
-            converter = DocumentConverter()
-            result = converter.convert(tmp_path)
-            return True
-        finally:
-            os.unlink(tmp_path)
-
     except Exception:
         return False

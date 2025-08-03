@@ -225,3 +225,74 @@ button:disabled {
 #downloadLink:hover {
   background-color: #219653;
 }
+
+/* Podcast List Styles */
+#podcastListContainer {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+}
+
+#podcastList h2 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.podcast-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  transition: all 0.3s ease;
+}
+
+.podcast-item:hover {
+  background-color: #e3f2fd;
+  border-color: #bbdefb;
+}
+
+.podcast-info {
+  flex-grow: 1;
+}
+
+.podcast-name {
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.podcast-details {
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.podcast-date {
+  margin-right: 15px;
+}
+
+.podcast-size {
+  margin-right: 15px;
+}
+
+.podcast-download {
+  display: inline-flex;
+  align-items: center;
+  background-color: #27ae60;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  transition: background-color 0.3s;
+}
+
+.podcast-download:hover {
+  background-color: #219653;
+}
+
+.podcast-download i {
+  margin-right: 5px;
+}
