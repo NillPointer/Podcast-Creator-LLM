@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Podcast Creator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>Podcast Creator</h1>
+    <p>Upload a PDF to convert it into a 2-host podcast</p>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="pdfFile">Select PDF File:</label>
+        <input type="file" id="pdfFile" name="file" accept=".pdf" required>
+      </div>
+
+      <div class="form-group">
+        <label for="speakerAVoice">Speaker A Voice:</label>
+        <input type="text" id="speakerAVoice" name="speaker_a_voice" value="default_a">
+      </div>
+
+      <div class="form-group">
+        <label for="speakerBVoice">Speaker B Voice:</label>
+        <input type="text" id="speakerBVoice" name="speaker_b_voice" value="default_b">
+      </div>
+
+      <button type="submit" id="submitBtn">Create Podcast</button>
+    </form>
+
+    <div id="statusMessage"></div>
+    <div id="progressContainer" style="display: none;">
+      <div id="progressBar">
+        <div id="progressFill"></div>
+      </div>
+      <span id="progressText">0%</span>
+    </div>
+    <div id="resultContainer" style="display: none;">
+      <h3>Podcast Created Successfully!</h3>
+      <a id="downloadLink" href="#" download>Download Podcast</a>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

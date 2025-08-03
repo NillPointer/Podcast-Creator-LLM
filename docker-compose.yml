@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  podcast-creator:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_ENDPOINT=${LLM_ENDPOINT:-http://localhost:11434/v1}
+      - TTS_ENDPOINT=${TTS_ENDPOINT:-http://localhost:11434/v1}
+      - AUDIO_STORAGE_PATH=/app/audio_storage
+      - MAX_FILE_SIZE=10485760
+    volumes:
+      - ./audio_storage:/app/audio_storage
+      - ./logs:/app/logs
+      - ./static:/app/static
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

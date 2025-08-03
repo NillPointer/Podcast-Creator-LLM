@@ -1,0 +1,10 @@
+fastapi==0.115.0
+uvicorn==0.30.6
+PyPDF2==3.0.1
+python-multipart==0.0.9
+requests==2.32.3
+pydub==0.25.1
+python-dotenv==1.0.1
+
+# ffmpeg is required for pydub to process audio files
+# It should be installed in the container environment
