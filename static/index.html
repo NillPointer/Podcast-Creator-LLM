@@ -16,7 +16,14 @@
     <form id="uploadForm" enctype="multipart/form-data">
       <div class="form-group">
         <label for="pdfFiles">Select PDF Files:</label>
-        <input type="file" id="pdfFiles" name="files" accept=".pdf" multiple required>
+        <div class="file-upload-container">
+          <div class="drop-area" id="dropArea">
+            <p>Drag & drop PDF files here or click to browse</p>
+            <p class="file-info">Supports multiple files</p>
+            <input type="file" id="pdfFiles" name="files" accept=".pdf" multiple style="display: none;">
+          </div>
+          <div class="selected-files" id="selectedFiles"></div>
+        </div>
       </div>
 
       <div class="form-group">

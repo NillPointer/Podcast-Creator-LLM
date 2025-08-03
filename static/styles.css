@@ -54,6 +54,84 @@ input[type="text"] {
   font-size: 16px;
 }
 
+/* Enhanced file upload styles */
+.file-upload-container {
+  border: 2px dashed #3498db;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
+  background-color: #f8f9fa;
+}
+
+.file-upload-container.highlight {
+  border-color: #2980b9;
+  background-color: #e3f2fd;
+}
+
+.drop-area p {
+  margin: 5px 0;
+}
+
+.file-info {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin-top: 10px;
+}
+
+.selected-files {
+  margin-top: 20px;
+}
+
+.no-files {
+  text-align: center;
+  color: #7f8c8d;
+  font-style: italic;
+  padding: 10px;
+}
+
+.selected-file {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #e3f2fd;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  border: 1px solid #bbdefb;
+}
+
+.file-name {
+  flex-grow: 1;
+  word-break: break-all;
+}
+
+.file-size {
+  margin: 0 10px;
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.remove-file {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.remove-file:hover {
+  background-color: #c0392b;
+}
+
 button {
   width: 100%;
   padding: 12px;
@@ -94,6 +172,13 @@ button:disabled {
   background-color: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
+  display: block;
+}
+
+#statusMessage.warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
   display: block;
 }
 
