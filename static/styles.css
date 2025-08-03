@@ -278,6 +278,30 @@
     margin-right: 15px;
   }
 
+  .podcast-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .podcast-play {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 16px;
+  }
+
+  .podcast-play:hover {
+    background-color: #219653;
+  }
+
   .podcast-download {
     display: inline-flex;
     align-items: center;
@@ -295,6 +319,11 @@
 
   .podcast-download i {
     margin-right: 5px;
+  }
+
+  audio {
+    width: 100%;
+    margin-top: 10px;
   }
 
   /* Arxiv URL input styles */

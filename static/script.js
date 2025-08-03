@@ -373,15 +373,102 @@ document.addEventListener('DOMContentLoaded', function () {
               <span class="podcast-date">${formatDateForDisplay(podcast.created_at)}</span>
             </div>
           </div>
-          <a class="podcast-download" href="/api/v1/podcasts/download/${encodeURIComponent(podcast.filename)}" download>
-            <i class="download-icon">⬇</i> Download
-          </a>
+          <div class="podcast-controls">
+            <button class="podcast-play" data-filename="${encodeURIComponent(podcast.filename)}" title="Play">
+              <i class="play-icon">▶</i>
+            </button>
+            <a class="podcast-download" href="/api/v1/podcasts/download/${encodeURIComponent(podcast.filename)}" download>
+              <i class="download-icon">⬇</i> Download
+            </a>
+          </div>
         `;
 
       podcastList.appendChild(podcastItem);
     });
 
     podcastListContainer.style.display = 'block';
+
+    // Add event listeners for play buttons
+    document.querySelectorAll('.podcast-play').forEach(button => {
+      button.addEventListener('click', handlePlayButtonClick);
+    });
+  }
+
+  // Function to handle play button clicks
+  function handlePlayButtonClick() {
+    const filename = this.getAttribute('data-filename');
+
+    // Check if there's already an active audio element
+    const existingAudio = document.querySelector('audio[data-filename]');
+    if (existingAudio) {
+      // If clicking the same button, pause/play toggle
+      if (existingAudio.getAttribute('data-filename') === filename) {
+        if (existingAudio.paused) {
+          existingAudio.play();
+        } else {
+          existingAudio.pause();
+        }
+        return;
+      } else {
+        // If playing a different podcast, stop the current one
+        existingAudio.pause();
+        existingAudio.remove();
+      }
+    }
+
+    // Create new audio element
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.style.display = 'block';
+    audio.style.marginTop = '10px';
+    audio.style.width = '100%';
+    audio.setAttribute('data-filename', filename);
+
+    // Create source element
+    const source = document.createElement('source');
+    source.src = `/api/v1/podcasts/stream/${filename}`;
+    source.type = 'audio/mpeg';
+
+    // Append source to audio
+    audio.appendChild(source);
+
+    // Insert audio element before the podcast item
+    this.parentElement.parentElement.insertBefore(audio, this.parentElement);
+
+    // Play the audio
+    audio.play();
+
+    // Add event listeners for play/pause and time updates
+    audio.addEventListener('play', () => {
+      updatePlayButtonState(this, true);
+    });
+
+    audio.addEventListener('pause', () => {
+      updatePlayButtonState(this, false);
+    });
+
+    audio.addEventListener('ended', () => {
+      updatePlayButtonState(this, false);
+    });
+  }
+
+  // Function to update play/pause button state
+  function updatePlayButtonState(button, isPlaying) {
+    const icon = button.querySelector('.play-icon');
+    if (icon) {
+      icon.textContent = isPlaying ? '⏸' : '▶';
+      button.setAttribute('title', isPlaying ? 'Pause' : 'Play');
+    }
+
+    // Remove audio element when paused
+    if (!isPlaying) {
+      const filename = button.getAttribute('data-filename');
+      const audio = document.querySelector(`audio[data-filename="${filename}"]`);
+      if (audio) {
+        audio.pause();
+        audio.remove();
+      }
+    }
   }
 
   // Initial fetch of podcast list when page loads

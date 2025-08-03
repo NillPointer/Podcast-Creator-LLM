@@ -159,6 +159,31 @@ async def download_podcast(filename: str = Path(..., title="Filename of the podc
         filename=filename
     )
 
+@router.get("/podcasts/stream/{filename}")
+async def stream_podcast(filename: str = Path(..., title="Filename of the podcast to stream")):
+    """
+    Stream the generated podcast file.
+
+    Args:
+        filename: Filename of the podcast to stream
+
+    Returns:
+        Streaming response for MP3 file
+    """
+    # Construct the full path
+    file_path = os.path.join(settings.AUDIO_STORAGE_PATH, filename)
+
+    if not os.path.exists(file_path):
+        logger.warning(f"File not found: {file_path}")
+        raise HTTPException(status_code=404, detail="File not found")
+
+    logger.info(f"Initiating streaming for file: {filename}")
+    return FileResponse(
+        file_path,
+        media_type="audio/mpeg",
+        filename=filename
+    )
+
 @router.get("/podcasts")
 async def list_podcasts():
     """
