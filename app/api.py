@@ -178,21 +178,21 @@ async def process_podcast_job(job_id: str, file_content: bytes,
         # Update job status
         logger.info(f"Starting processing for job: {job_id}")
         jobs[job_id]["status"] = "processing"
-        jobs[job_id]["progress"] = 10
+        jobs[job_id]["progress"] = 5  # Initial progress
 
         # Step 1: Extract text from PDF
         file_stream = BytesIO(file_content)
         logger.debug(f"Extracting text from PDF for job: {job_id}")
         text_content = extract_text_from_pdf(file_stream)
         logger.debug(f"Successfully extracted text from PDF for job: {job_id}")
-        jobs[job_id]["progress"] = 25
+        jobs[job_id]["progress"] = 15
 
         # Step 2: Generate podcast script with LLM
         logger.info(f"Generating podcast script for job: {job_id}")
         llm_client = LLMClient()
         dialogue = llm_client.generate_podcast_script(text_content, speaker_a_voice, speaker_b_voice)
         logger.info(f"Successfully generated podcast script for job: {job_id}")
-        jobs[job_id]["progress"] = 50
+        jobs[job_id]["progress"] = 35
 
         # Step 3: Generate audio segments with TTS
         logger.info(f"Generating audio segments for job: {job_id}")
@@ -201,7 +201,7 @@ async def process_podcast_job(job_id: str, file_content: bytes,
             dialogue, speaker_a_voice, speaker_b_voice
         )
         logger.info(f"Successfully generated audio segments for job: {job_id}")
-        jobs[job_id]["progress"] = 75
+        jobs[job_id]["progress"] = 60
 
         # Step 4: Stitch audio segments
         logger.info(f"Stitching audio segments for job: {job_id}")
@@ -210,16 +210,17 @@ async def process_podcast_job(job_id: str, file_content: bytes,
             audio_files, f"podcast_{job_id}.mp3"
         )
         logger.info(f"Successfully stitched audio segments for job: {job_id}")
-        jobs[job_id]["progress"] = 90
+        jobs[job_id]["progress"] = 85
 
         # Step 5: Cleanup temporary files
         logger.debug(f"Cleaning up temporary files for job: {job_id}")
         stitcher.cleanup_temp_files(audio_files)
-        jobs[job_id]["progress"] = 100
+        jobs[job_id]["progress"] = 95
 
         # Update job status
         jobs[job_id]["status"] = "completed"
         jobs[job_id]["result_file"] = output_file
+        jobs[job_id]["progress"] = 100
         logger.info(f"Job completed successfully: {job_id}")
 
     except Exception as e:
