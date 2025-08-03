@@ -39,22 +39,26 @@ async def create_podcast(
     """
     # Validate file size
     if file.size > settings.MAX_FILE_SIZE:
+        logger.warning(f"File too large: {file.size} bytes > {settings.MAX_FILE_SIZE} bytes")
         raise HTTPException(status_code=413, detail="File too large")
 
     # Validate file type
     if file.content_type != "application/pdf":
+        logger.warning(f"Invalid file type: {file.content_type}")
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
     # Read file content
     content = await file.read()
-    logger.info("Got content")
+    logger.debug(f"Successfully read file content. Size: {len(content)} bytes")
 
     # Validate PDF
     if not validate_pdf_file(content):
+        logger.warning("Invalid PDF file detected")
         raise HTTPException(status_code=400, detail="Invalid PDF file")
 
     # Create job ID
     job_id = str(uuid.uuid4())
+    logger.info(f"Created new job: {job_id}")
 
     # Store job info
     from datetime import datetime
@@ -69,7 +73,7 @@ async def create_podcast(
     # Process in background
     background_tasks.add_task(process_podcast_job, job_id, content, speaker_a_voice, speaker_b_voice)
 
-    logger.info("Added to background tasks")
+    logger.info(f"Job {job_id} added to background processing queue")
 
     return {
         "job_id": job_id,
@@ -89,6 +93,7 @@ async def get_podcast_status(job_id: str):
         Job status information
     """
     if job_id not in jobs:
+        logger.warning(f"Job not found: {job_id}")
         raise HTTPException(status_code=404, detail="Job not found")
 
     job_info = jobs[job_id]
@@ -115,19 +120,24 @@ async def download_podcast(job_id: str):
         MP3 file response
     """
     if job_id not in jobs:
+        logger.warning(f"Job not found during download: {job_id}")
         raise HTTPException(status_code=404, detail="Job not found")
 
     job_info = jobs[job_id]
 
     if job_info["status"] != "completed":
+        logger.warning(f"Attempt to download incomplete job: {job_id} (status: {job_info['status']})")
         raise HTTPException(status_code=400, detail="Podcast not ready for download")
 
     if not job_info["result_file"]:
+        logger.warning(f"Result file missing for job: {job_id}")
         raise HTTPException(status_code=404, detail="Result file not found")
 
     if not os.path.exists(job_info["result_file"]):
+        logger.warning(f"Result file not found on disk: {job_info['result_file']}")
         raise HTTPException(status_code=404, detail="Result file not found")
 
+    logger.info(f"Initiating download for completed job: {job_id}")
     return FileResponse(
         job_info["result_file"],
         media_type="audio/mpeg",
@@ -142,6 +152,7 @@ async def list_podcasts():
     Returns:
         List of job information
     """
+    logger.debug("Listing all podcast jobs")
     return [
         {
             "job_id": job_id,
@@ -165,48 +176,53 @@ async def process_podcast_job(job_id: str, file_content: bytes,
     """
     try:
         # Update job status
-        logger.info("processing job")
+        logger.info(f"Starting processing for job: {job_id}")
         jobs[job_id]["status"] = "processing"
         jobs[job_id]["progress"] = 10
 
         # Step 1: Extract text from PDF
         file_stream = BytesIO(file_content)
-        logger.info("extracing pdf content")
+        logger.debug(f"Extracting text from PDF for job: {job_id}")
         text_content = extract_text_from_pdf(file_stream)
-        logger.info("extraced Pdf content")
+        logger.debug(f"Successfully extracted text from PDF for job: {job_id}")
         jobs[job_id]["progress"] = 25
 
         # Step 2: Generate podcast script with LLM
-        logger.info("Init LLM Client")
+        logger.info(f"Generating podcast script for job: {job_id}")
         llm_client = LLMClient()
-        logger.info("Have LLM Client, genearting script")
         dialogue = llm_client.generate_podcast_script(text_content, speaker_a_voice, speaker_b_voice)
-        logger.info("Generated Script")
+        logger.info(f"Successfully generated podcast script for job: {job_id}")
         jobs[job_id]["progress"] = 50
 
         # Step 3: Generate audio segments with TTS
+        logger.info(f"Generating audio segments for job: {job_id}")
         tts_client = TTSClient()
         audio_files = tts_client.generate_audio_segments(
             dialogue, speaker_a_voice, speaker_b_voice
         )
+        logger.info(f"Successfully generated audio segments for job: {job_id}")
         jobs[job_id]["progress"] = 75
 
         # Step 4: Stitch audio segments
+        logger.info(f"Stitching audio segments for job: {job_id}")
         stitcher = AudioStitcher()
         output_file = stitcher.stitch_audio_segments(
             audio_files, f"podcast_{job_id}.mp3"
         )
+        logger.info(f"Successfully stitched audio segments for job: {job_id}")
         jobs[job_id]["progress"] = 90
 
         # Step 5: Cleanup temporary files
+        logger.debug(f"Cleaning up temporary files for job: {job_id}")
         stitcher.cleanup_temp_files(audio_files)
         jobs[job_id]["progress"] = 100
 
         # Update job status
         jobs[job_id]["status"] = "completed"
         jobs[job_id]["result_file"] = output_file
+        logger.info(f"Job completed successfully: {job_id}")
 
     except Exception as e:
         jobs[job_id]["status"] = "failed"
         jobs[job_id]["error"] = str(e)
-        print(f"Error processing job {job_id}: {str(e)}")
+        logger.error(f"Error processing job {job_id}: {str(e)}", exc_info=True)
