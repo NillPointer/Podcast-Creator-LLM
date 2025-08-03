@@ -11,12 +11,16 @@ class LLMClient:
         self.endpoint = f"{settings.LLM_ENDPOINT}/v1/chat/completions"
         self.system_prompt_template = settings.LLM_SYSTEM_PROMPT
 
-    def generate_podcast_script(self, text_content: str, host_a_name: str, host_b_name: str) -> List[Dict[str, str]]:
+    def generate_podcast_script(self, text_content: str, host_a_name: str, host_b_name: str, intro: bool, outro:bool) -> List[Dict[str, str]]:
         """
         Send text content to LLM and get podcast script.
 
         Args:
             text_content: The text content to convert to podcast format
+            host_a_name: Name for HOST_A
+            host_b_name: Name for Host_B
+            intro: Enable Intro segment
+            outro: Enable Outro segment
 
         Returns:
             List of dialogue segments with speaker and text
@@ -27,8 +31,8 @@ class LLMClient:
         # Prepare the system prompt with dynamic values
         system_prompt = self.system_prompt_template.replace("$HOST_A_NAME", host_a_name)
         system_prompt = system_prompt.replace("$HOST_B_NAME", host_b_name)
-        system_prompt = system_prompt.replace("$INTRO_ENABLED", settings.INTRO_ENABLED)
-        system_prompt = system_prompt.replace("$OUTRO_ENABLED", settings.OUTRO_ENABLED)
+        system_prompt = system_prompt.replace("$INTRO_SEGMENT", settings.INTRO_SEGMENT_INSTRUCTIONS[intro])
+        system_prompt = system_prompt.replace("$OUTRO_SEGMENT", settings.OUTRO_SEGMENT_INSTRUCTIONS[outro])
 
         # Prepare the payload for the LLM API with system and user messages
         payload = {

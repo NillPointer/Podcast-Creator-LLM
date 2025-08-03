@@ -8,8 +8,14 @@ class Settings:
     # Podcast Settings
     HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Jeremiah")
     HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Alexander")
-    INTRO_ENABLED: str = os.getenv("INTRO_ENABLED", "true")
-    OUTRO_ENABLED: str = os.getenv("OUTRO_ENABLED", "true")
+    INTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
+        True: "Before discussing the topic, create a natural, friendly introduction to the podcast for the audience. It will introduce the hosts and the podcast as a whole with light banter before discussing the topic.",
+        False: "DO NOT include any sort of intro segment, assume the podcast is resuming from a short commercial break"
+    }
+    OUTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
+        True: "End with a natural wrap-up that includes some humor or personal comment",
+        False: "End conversationally as if moving to another topic"
+    }
 
     # LLM Settings
     LLM_ENDPOINT: str = os.getenv("LLM_ENDPOINT", "http://192.168.1.16:8000")
@@ -38,12 +44,10 @@ Follow these guidelines:
    ```
 
 3. **Podcast Structure**:
-    - Intro segment: $INTRO_ENABLED
-       - If true: Create a natural, friendly introduction where hosts banter before getting to the topic
-       - If false: Start mid-conversation as if returning from a break
-    - Outro segment: $OUTRO_ENABLED
-        - If true: End with a natural wrap-up that includes some humor or personal comment
-        - If false: End conversationally as if moving to another topic
+    - Intro segment:
+       - $INTRO_SEGMENT
+    - Outro segment:
+        - $OUTRO_SEGMENT
 
 4. **Host Behavior**:
     - The hosts should sound like good friends who enjoy teasing each other and making jokes about:

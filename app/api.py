@@ -21,40 +21,50 @@ jobs = {}
 
 @router.post("/podcasts")
 async def create_podcast(
-    file: UploadFile = File(...),
+    files: List[UploadFile] = File(...),
     speaker_a_voice: str = settings.HOST_A_NAME,
     speaker_b_voice: str = settings.HOST_B_NAME,
     background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """
-    Upload a PDF file and initiate podcast generation.
+    Upload PDF files and initiate podcast generation.
 
     Args:
-        file: PDF file to process
+        files: List of PDF files to process
         speaker_a_voice: Voice ID for speaker A
         speaker_b_voice: Voice ID for speaker B
 
     Returns:
         Job information with status
     """
-    # Validate file size
-    if file.size > settings.MAX_FILE_SIZE:
-        logger.warning(f"File too large: {file.size} bytes > {settings.MAX_FILE_SIZE} bytes")
-        raise HTTPException(status_code=413, detail="File too large")
+    # Validate that at least one file is provided
+    if not files:
+        logger.warning("No files provided")
+        raise HTTPException(status_code=400, detail="At least one PDF file is required")
 
-    # Validate file type
-    if file.content_type != "application/pdf":
-        logger.warning(f"Invalid file type: {file.content_type}")
-        raise HTTPException(status_code=400, detail="Only PDF files are supported")
+    # Read and validate all files
+    file_contents = []
+    for file in files:
+        # Validate file size
+        if file.size > settings.MAX_FILE_SIZE:
+            logger.warning(f"File too large: {file.size} bytes > {settings.MAX_FILE_SIZE} bytes")
+            raise HTTPException(status_code=413, detail="File too large")
 
-    # Read file content
-    content = await file.read()
-    logger.debug(f"Successfully read file content. Size: {len(content)} bytes")
+        # Validate file type
+        if file.content_type != "application/pdf":
+            logger.warning(f"Invalid file type: {file.content_type}")
+            raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
-    # Validate PDF
-    if not validate_pdf_file(content):
-        logger.warning("Invalid PDF file detected")
-        raise HTTPException(status_code=400, detail="Invalid PDF file")
+        # Read file content
+        content = await file.read()
+        logger.debug(f"Successfully read file content. Size: {len(content)} bytes")
+
+        # Validate PDF
+        if not validate_pdf_file(content):
+            logger.warning("Invalid PDF file detected")
+            raise HTTPException(status_code=400, detail="Invalid PDF file")
+
+        file_contents.append(content)
 
     # Create job ID
     job_id = str(uuid.uuid4())
@@ -71,7 +81,7 @@ async def create_podcast(
     }
 
     # Process in background
-    background_tasks.add_task(process_podcast_job, job_id, content, speaker_a_voice, speaker_b_voice)
+    background_tasks.add_task(process_podcast_job, job_id, file_contents, speaker_a_voice, speaker_b_voice)
 
     logger.info(f"Job {job_id} added to background processing queue")
 
@@ -163,14 +173,14 @@ async def list_podcasts():
         for job_id, job_info in jobs.items()
     ]
 
-async def process_podcast_job(job_id: str, file_content: bytes,
+async def process_podcast_job(job_id: str, file_contents: List[bytes],
                             speaker_a_voice: str, speaker_b_voice: str):
     """
-    Background task to process podcast generation.
+    Background task to process podcast generation for multiple PDFs.
 
     Args:
         job_id: Unique identifier for the job
-        file_content: PDF file content
+        file_contents: List of PDF file contents
         speaker_a_voice: Voice ID for speaker A
         speaker_b_voice: Voice ID for speaker B
     """
@@ -180,42 +190,65 @@ async def process_podcast_job(job_id: str, file_content: bytes,
         jobs[job_id]["status"] = "processing"
         jobs[job_id]["progress"] = 5  # Initial progress
 
-        # Step 1: Extract text from PDF
-        file_stream = BytesIO(file_content)
-        logger.debug(f"Extracting text from PDF for job: {job_id}")
-        text_content = extract_text_from_pdf(file_stream)
-        logger.debug(f"Successfully extracted text from PDF for job: {job_id}")
-        jobs[job_id]["progress"] = 15
+        total_pdfs = len(file_contents)
+        all_audio_files = []  # Will store all audio segments from all PDFs
 
-        # Step 2: Generate podcast script with LLM
-        logger.info(f"Generating podcast script for job: {job_id}")
+        # Step 1: Extract text from all PDFs
+        logger.info(f"Extracting text from all {total_pdfs} PDFs for job: {job_id}")
+        text_contents = []
+        for index, file_content in enumerate(file_contents):
+            file_stream = BytesIO(file_content)
+            logger.debug(f"Extracting text from PDF {index + 1}/{total_pdfs} for job: {job_id}")
+            text_content = extract_text_from_pdf(file_stream)
+            logger.debug(f"Successfully extracted text from PDF {index + 1}/{total_pdfs} for job: {job_id}")
+            text_contents.append(text_content)
+
+        jobs[job_id]["progress"] = 20  # 20% after text extraction
+
+        # Step 2: Generate podcast scripts with LLM for all PDFs
+        logger.info(f"Generating podcast scripts for all {total_pdfs} PDFs for job: {job_id}")
+        all_dialogues = []
         llm_client = LLMClient()
-        dialogue = llm_client.generate_podcast_script(text_content, speaker_a_voice, speaker_b_voice)
-        logger.info(f"Successfully generated podcast script for job: {job_id}")
-        jobs[job_id]["progress"] = 35
+        for index, text_content in enumerate(text_contents):
+            # Set intro/outro based on position
+            intro = False
+            outro = False
+            if index == 0:  # First PDF
+                intro = True
+            elif index == total_pdfs - 1:  # Last PDF
+                outro = True
 
-        # Step 3: Generate audio segments with TTS
-        logger.info(f"Generating audio segments for job: {job_id}")
+            logger.debug(f"Generating script for PDF {index + 1}/{total_pdfs} for job: {job_id}")
+            dialogue = llm_client.generate_podcast_script(text_content, speaker_a_voice, speaker_b_voice, intro, outro)
+            logger.debug(f"Successfully generated script for PDF {index + 1}/{total_pdfs} for job: {job_id}")
+            all_dialogues.append(dialogue)
+
+        jobs[job_id]["progress"] = 50  # 50% after LLM processing
+
+        # Step 3: Generate audio segments with TTS for all PDFs
+        logger.info(f"Generating audio segments for all {total_pdfs} PDFs for job: {job_id}")
         tts_client = TTSClient()
-        audio_files = tts_client.generate_audio_segments(
-            dialogue, speaker_a_voice, speaker_b_voice
-        )
-        logger.info(f"Successfully generated audio segments for job: {job_id}")
-        jobs[job_id]["progress"] = 60
+        for index, dialogue in enumerate(all_dialogues):
+            logger.debug(f"Generating audio for PDF {index + 1}/{total_pdfs} for job: {job_id}")
+            audio_files = tts_client.generate_audio_segments(
+                dialogue, index, speaker_a_voice, speaker_b_voice
+            )
+            logger.debug(f"Successfully generated audio for PDF {index + 1}/{total_pdfs} for job: {job_id}")
+            all_audio_files.extend(audio_files)
 
-        # Step 4: Stitch audio segments
-        logger.info(f"Stitching audio segments for job: {job_id}")
+        jobs[job_id]["progress"] = 80  # 80% after TTS generation
+
+        # Step 4: Stitch all audio segments into final output
+        logger.info(f"Stitching all audio segments for job: {job_id}")
         stitcher = AudioStitcher()
         output_file = stitcher.stitch_audio_segments(
-            audio_files, f"podcast_{job_id}.mp3"
+            all_audio_files, f"podcast_{job_id}.mp3"
         )
-        logger.info(f"Successfully stitched audio segments for job: {job_id}")
-        jobs[job_id]["progress"] = 85
+        logger.info(f"Successfully stitched all audio segments for job: {job_id}")
 
-        # Step 5: Cleanup temporary files
+        # Cleanup temporary files
         logger.debug(f"Cleaning up temporary files for job: {job_id}")
-        stitcher.cleanup_temp_files(audio_files)
-        jobs[job_id]["progress"] = 95
+        stitcher.cleanup_temp_files(all_audio_files)
 
         # Update job status
         jobs[job_id]["status"] = "completed"

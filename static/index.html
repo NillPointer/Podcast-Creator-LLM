@@ -11,12 +11,12 @@
 <body>
   <div class="container">
     <h1>Podcast Creator</h1>
-    <p>Upload a PDF to convert it into a 2-host podcast</p>
+    <p>Upload PDF files to convert them into a 2-host podcast</p>
 
     <form id="uploadForm" enctype="multipart/form-data">
       <div class="form-group">
-        <label for="pdfFile">Select PDF File:</label>
-        <input type="file" id="pdfFile" name="file" accept=".pdf" required>
+        <label for="pdfFiles">Select PDF Files:</label>
+        <input type="file" id="pdfFiles" name="files" accept=".pdf" multiple required>
       </div>
 
       <div class="form-group">
