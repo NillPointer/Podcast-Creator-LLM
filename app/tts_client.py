@@ -11,9 +11,10 @@ class TTSClient:
         self.endpoint = f"{settings.TTS_ENDPOINT}/v1/audio/speech"
 
     def generate_audio_segments(self, dialogue: List[Dict[str, str]],
-                              global_index: int = 0,
-                              speaker_a_voice: str = "Alexander",
-                              speaker_b_voice: str = "Eli") -> List[str]:
+                              global_index: int,
+                              speaker_a_voice: str,
+                              speaker_b_voice: str,
+                              temp_dir: str) -> List[str]:
         """
         Generate audio segments for each dialogue line using TTS.
 
@@ -22,6 +23,7 @@ class TTSClient:
             global_index: For multi podcast processing
             speaker_a_voice: Voice ID for speaker A
             speaker_b_voice: Voice ID for speaker B
+            temp_dir: Temporary directory path for storing audio segments
 
         Returns:
             List of file paths to generated audio segments
@@ -29,6 +31,7 @@ class TTSClient:
         Raises:
             Exception: If TTS request fails
         """
+
         audio_files = []
 
         for i, segment in enumerate(dialogue):
@@ -58,10 +61,7 @@ class TTSClient:
 
                 # Save the audio file
                 filename = f"segment_{global_index}_{i+1:03d}.mp3"
-                filepath = os.path.join(settings.AUDIO_STORAGE_PATH, filename)
-
-                # Ensure storage directory exists
-                os.makedirs(settings.AUDIO_STORAGE_PATH, exist_ok=True)
+                filepath = os.path.join(temp_dir, filename)
 
                 # Save the audio data
                 with open(filepath, "wb") as f:

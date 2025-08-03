@@ -19,7 +19,7 @@ class Settings:
 
     # LLM Settings
     LLM_ENDPOINT: str = os.getenv("LLM_ENDPOINT", "http://192.168.1.16:8000")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "Mistral-Small-3.2-24B-FP8")
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "Devstral-Small-1.1-FP8")
     LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.15"))
     LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "600"))
     LLM_SYSTEM_PROMPT: str = os.getenv(

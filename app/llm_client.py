@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 from typing import List, Dict, Any
 from app.config.settings import settings
 from app.logger import setup_logger
@@ -11,7 +12,13 @@ class LLMClient:
         self.endpoint = f"{settings.LLM_ENDPOINT}/v1/chat/completions"
         self.system_prompt_template = settings.LLM_SYSTEM_PROMPT
 
-    def generate_podcast_script(self, text_content: str, host_a_name: str, host_b_name: str, intro: bool, outro:bool) -> List[Dict[str, str]]:
+    def generate_podcast_script(self, 
+    text_content: str, 
+    host_a_name: str, 
+    host_b_name: str, 
+    intro: bool, 
+    outro:bool, 
+    temp_dir: str) -> List[Dict[str, str]]:
         """
         Send text content to LLM and get podcast script.
 
@@ -21,6 +28,7 @@ class LLMClient:
             host_b_name: Name for Host_B
             intro: Enable Intro segment
             outro: Enable Outro segment
+            temp_dir: Temporary directory for debug
 
         Returns:
             List of dialogue segments with speaker and text
@@ -75,6 +83,8 @@ class LLMClient:
                         json_content = content.strip()
 
                     parsed_response = json.loads(json_content)
+                    with open(f'{temp_dir}.json', 'w', encoding='utf-8') as f:
+                        json.dump(parsed_response, f, ensure_ascii=False, indent=4)
                     return parsed_response.get("dialogue", [])
                 except json.JSONDecodeError:
                     raise Exception("Invalid LLM response format")

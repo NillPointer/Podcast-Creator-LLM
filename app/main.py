@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from app.api import router
 from app.config.settings import settings
 from app.logger import setup_logger
@@ -35,7 +36,9 @@ app.include_router(router, prefix="/api/v1")
 
 @app.get("/")
 async def root():
-    return {"message": "Podcast Creator API is running. Visit /static/index.html for the web interface."}
+    with open("static/index.html", "r") as f:
+        html_content = f.read()
+    return HTMLResponse(content=html_content, media_type="text/html")
 
 @app.get("/health")
 async def health_check():

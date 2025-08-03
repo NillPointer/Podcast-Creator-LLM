@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   async function monitorProgress(jobId) {
-    const MAX_POLL_ATTEMPTS = 60; // 1 minute max polling time
+    const MAX_POLL_ATTEMPTS = 180; // 3 minute max polling time per status
     let pollAttempts = 0;
     const POLL_INTERVAL = 1000; // 1 second between polls
 
@@ -189,6 +189,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (previousStatus !== result.status) {
           console.log(`Job status changed to: ${result.status}`);
           previousStatus = result.status;
+          pollAttempts = 0
         }
 
         if (result.status === 'completed') {

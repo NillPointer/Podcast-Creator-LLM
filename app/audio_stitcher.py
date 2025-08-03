@@ -53,19 +53,3 @@ class AudioStitcher:
         except Exception as e:
             logger.error(f"Failed to stitch audio segments: {str(e)}")
             raise Exception(f"Failed to stitch audio segments: {str(e)}")
-    
-    def cleanup_temp_files(self, audio_files: List[str]):
-        """
-        Remove temporary audio files after stitching.
-        
-        Args:
-            audio_files: List of file paths to clean up
-        """
-        for audio_file in audio_files:
-            try:
-                if os.path.exists(audio_file):
-                    os.remove(audio_file)
-                    logger.debug(f"Cleaned up temporary file: {audio_file}")
-            except Exception as e:
-                # Log the error but don't fail the operation
-                logger.warning(f"Could not delete temp file {audio_file}: {str(e)}")

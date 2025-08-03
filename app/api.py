@@ -1,9 +1,11 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Depends
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 import uuid
 import os
+import tempfile
 from typing import Dict, List
 from io import BytesIO
+import threading
 from app.pdf_processor import extract_text_from_pdf, validate_pdf_file
 from app.llm_client import LLMClient
 from app.tts_client import TTSClient
@@ -24,7 +26,6 @@ async def create_podcast(
     files: List[UploadFile] = File(...),
     speaker_a_voice: str = settings.HOST_A_NAME,
     speaker_b_voice: str = settings.HOST_B_NAME,
-    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """
     Upload PDF files and initiate podcast generation.
@@ -80,10 +81,14 @@ async def create_podcast(
         "result_file": None
     }
 
-    # Process in background
-    background_tasks.add_task(process_podcast_job, job_id, file_contents, speaker_a_voice, speaker_b_voice)
+    # Start processing in a new thread
+    threading.Thread(
+        target=process_podcast_job,
+        args=(job_id, file_contents, speaker_a_voice, speaker_b_voice),
+        daemon=True
+    ).start()
 
-    logger.info(f"Job {job_id} added to background processing queue")
+    logger.info(f"Job {job_id} started in background thread")
 
     return {
         "job_id": job_id,
@@ -107,9 +112,6 @@ async def get_podcast_status(job_id: str):
         raise HTTPException(status_code=404, detail="Job not found")
 
     job_info = jobs[job_id]
-
-    # Don't log status checks as they are too noisy
-    # Status checks are intentionally not logged to reduce noise
 
     return {
         "job_id": job_id,
@@ -173,8 +175,8 @@ async def list_podcasts():
         for job_id, job_info in jobs.items()
     ]
 
-async def process_podcast_job(job_id: str, file_contents: List[bytes],
-                            speaker_a_voice: str, speaker_b_voice: str):
+def process_podcast_job(job_id: str, file_contents: List[bytes],
+                      speaker_a_voice: str, speaker_b_voice: str):
     """
     Background task to process podcast generation for multiple PDFs.
 
@@ -184,79 +186,86 @@ async def process_podcast_job(job_id: str, file_contents: List[bytes],
         speaker_a_voice: Voice ID for speaker A
         speaker_b_voice: Voice ID for speaker B
     """
-    try:
-        # Update job status
-        logger.info(f"Starting processing for job: {job_id}")
-        jobs[job_id]["status"] = "processing"
-        jobs[job_id]["progress"] = 5  # Initial progress
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        try:
+            # Update job status
+            logger.info(f"Starting processing for job: {job_id}")
+            jobs[job_id]["status"] = "processing"
+            jobs[job_id]["progress"] = 5  # Initial progress
 
-        total_pdfs = len(file_contents)
-        all_audio_files = []  # Will store all audio segments from all PDFs
+            total_pdfs = len(file_contents)
+            all_audio_files = []  # Will store all audio segments from all PDFs
 
-        # Step 1: Extract text from all PDFs
-        logger.info(f"Extracting text from all {total_pdfs} PDFs for job: {job_id}")
-        text_contents = []
-        for index, file_content in enumerate(file_contents):
-            file_stream = BytesIO(file_content)
-            logger.debug(f"Extracting text from PDF {index + 1}/{total_pdfs} for job: {job_id}")
-            text_content = extract_text_from_pdf(file_stream)
-            logger.debug(f"Successfully extracted text from PDF {index + 1}/{total_pdfs} for job: {job_id}")
-            text_contents.append(text_content)
+            # Step 1: Extract text from all PDFs
+            logger.info(f"Extracting text from all {total_pdfs} PDFs for job: {job_id}")
+            text_contents = []
+            progress_increment = 15 / total_pdfs
+            for index, file_content in enumerate(file_contents):
+                file_stream = BytesIO(file_content)
+                logger.debug(f"Extracting text from PDF {index + 1}/{total_pdfs} for job: {job_id}")
+                text_content = extract_text_from_pdf(file_stream)
+                logger.debug(f"Successfully extracted text from PDF {index + 1}/{total_pdfs} for job: {job_id}")
+                text_contents.append(text_content)
+                jobs[job_id]["progress"] += progress_increment
 
-        jobs[job_id]["progress"] = 20  # 20% after text extraction
+            # Step 2: Generate podcast scripts with LLM for all PDFs
+            logger.info(f"Generating podcast scripts for all {total_pdfs} PDFs for job: {job_id}")
+            all_dialogues = []
+            llm_client = LLMClient()
+            progress_increment = 30 / total_pdfs
+            for index, text_content in enumerate(text_contents):
+                # Set intro/outro based on position
+                intro = False
+                outro = False
+                if index == 0:  # First PDF
+                    intro = True
+                elif index == total_pdfs - 1:  # Last PDF
+                    outro = True
 
-        # Step 2: Generate podcast scripts with LLM for all PDFs
-        logger.info(f"Generating podcast scripts for all {total_pdfs} PDFs for job: {job_id}")
-        all_dialogues = []
-        llm_client = LLMClient()
-        for index, text_content in enumerate(text_contents):
-            # Set intro/outro based on position
-            intro = False
-            outro = False
-            if index == 0:  # First PDF
-                intro = True
-            elif index == total_pdfs - 1:  # Last PDF
-                outro = True
+                logger.debug(f"Generating script for PDF {index + 1}/{total_pdfs} for job: {job_id}")
+                dialogue = llm_client.generate_podcast_script(
+                    text_content,
+                    speaker_a_voice,
+                    speaker_b_voice,
+                    intro,
+                    outro,
+                    tmpdirname)
+                logger.debug(f"Successfully generated script for PDF {index + 1}/{total_pdfs} for job: {job_id}")
+                all_dialogues.append(dialogue)
+                jobs[job_id]["progress"] += progress_increment
 
-            logger.debug(f"Generating script for PDF {index + 1}/{total_pdfs} for job: {job_id}")
-            dialogue = llm_client.generate_podcast_script(text_content, speaker_a_voice, speaker_b_voice, intro, outro)
-            logger.debug(f"Successfully generated script for PDF {index + 1}/{total_pdfs} for job: {job_id}")
-            all_dialogues.append(dialogue)
+            # Step 3: Generate audio segments with TTS for all PDFs
+            logger.info(f"Generating audio segments for all {total_pdfs} PDFs for job: {job_id}")
+            tts_client = TTSClient()
+            progress_increment = 30 / total_pdfs
+            for index, dialogue in enumerate(all_dialogues):
+                logger.debug(f"Generating audio for PDF {index + 1}/{total_pdfs} for job: {job_id}")
+                audio_files = tts_client.generate_audio_segments(
+                    dialogue,
+                    index,
+                    speaker_a_voice,
+                    speaker_b_voice,
+                    tmpdirname
+                )
+                logger.debug(f"Successfully generated audio for PDF {index + 1}/{total_pdfs} for job: {job_id}")
+                all_audio_files.extend(audio_files)
+                jobs[job_id]["progress"] += progress_increment
 
-        jobs[job_id]["progress"] = 50  # 50% after LLM processing
-
-        # Step 3: Generate audio segments with TTS for all PDFs
-        logger.info(f"Generating audio segments for all {total_pdfs} PDFs for job: {job_id}")
-        tts_client = TTSClient()
-        for index, dialogue in enumerate(all_dialogues):
-            logger.debug(f"Generating audio for PDF {index + 1}/{total_pdfs} for job: {job_id}")
-            audio_files = tts_client.generate_audio_segments(
-                dialogue, index, speaker_a_voice, speaker_b_voice
+            # Step 4: Stitch all audio segments into final output
+            logger.info(f"Stitching all audio segments for job: {job_id}")
+            stitcher = AudioStitcher()
+            output_file = stitcher.stitch_audio_segments(
+                all_audio_files, f"podcast_{job_id}.mp3"
             )
-            logger.debug(f"Successfully generated audio for PDF {index + 1}/{total_pdfs} for job: {job_id}")
-            all_audio_files.extend(audio_files)
+            logger.info(f"Successfully stitched all audio segments for job: {job_id}")
 
-        jobs[job_id]["progress"] = 80  # 80% after TTS generation
+            # Update job status
+            jobs[job_id]["status"] = "completed"
+            jobs[job_id]["result_file"] = output_file
+            jobs[job_id]["progress"] = 100
+            logger.info(f"Job completed successfully: {job_id}")
 
-        # Step 4: Stitch all audio segments into final output
-        logger.info(f"Stitching all audio segments for job: {job_id}")
-        stitcher = AudioStitcher()
-        output_file = stitcher.stitch_audio_segments(
-            all_audio_files, f"podcast_{job_id}.mp3"
-        )
-        logger.info(f"Successfully stitched all audio segments for job: {job_id}")
-
-        # Cleanup temporary files
-        logger.debug(f"Cleaning up temporary files for job: {job_id}")
-        stitcher.cleanup_temp_files(all_audio_files)
-
-        # Update job status
-        jobs[job_id]["status"] = "completed"
-        jobs[job_id]["result_file"] = output_file
-        jobs[job_id]["progress"] = 100
-        logger.info(f"Job completed successfully: {job_id}")
-
-    except Exception as e:
-        jobs[job_id]["status"] = "failed"
-        jobs[job_id]["error"] = str(e)
-        logger.error(f"Error processing job {job_id}: {str(e)}", exc_info=True)
+        except Exception as e:
+            jobs[job_id]["status"] = "failed"
+            jobs[job_id]["error"] = str(e)
+            logger.error(f"Error processing job {job_id}: {str(e)}", exc_info=True)
