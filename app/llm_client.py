@@ -42,6 +42,8 @@ class LLMClient:
         system_prompt = system_prompt.replace("$INTRO_SEGMENT", settings.INTRO_SEGMENT_INSTRUCTIONS[intro])
         system_prompt = system_prompt.replace("$OUTRO_SEGMENT", settings.OUTRO_SEGMENT_INSTRUCTIONS[outro])
 
+        logger.info(f"Using System Prompt: {system_prompt}")
+
         # Prepare the payload for the LLM API with system and user messages
         payload = {
             "model": settings.LLM_MODEL,  # Use configured model

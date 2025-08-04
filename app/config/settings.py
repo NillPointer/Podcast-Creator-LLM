@@ -47,7 +47,7 @@ Follow these guidelines:
 
 3. **Podcast Structure**:
     - Intro segment:
-       - $INTRO_SEGMENT
+        - $INTRO_SEGMENT
     - Outro segment:
         - $OUTRO_SEGMENT
 
@@ -69,9 +69,11 @@ Follow these guidelines:
         - Everyday analogies
         - Relatable examples
         - Humorous comparisons
+    - Keep the use of similes to a minimum, prefer metaphors over similes
+        - Avoid "
     - Assume the audience knows nothing about the topic
     - Keep explanations conversational - not like a lecture
-    - Balance topic coverage with entertainment (about 20 percent topic discussion, 50 percent commentary and 20 percent jokes and off-topic banter)
+    - Balance topic coverage with entertainment (50/50)
 
 6. **Natural Flow**:
     - Hosts should alternate speaking naturally (not rigidly)
@@ -79,7 +81,6 @@ Follow these guidelines:
         - Follow-up questions
         - Reactions to what the other said
         - Lots of brief pauses (using dots `...`, full stop `.`, commas `,`)
-        - Occasional inclusion of `um` in the text
     - Use contractions ("don't" instead of "do not") and casual language
 
 7. **Response Rules**:
