@@ -11,7 +11,7 @@ class Settings:
     HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Linus")
     HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Kevin")
     INTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
-        True: "YOU MUST start the podcast script with the Hosts introducing themselves, then introducing the podcast, before continuing with the topics given.",
+        True: "For the intro segment of the podcast, start by first welcoming the audience to the podcast, then introducing the hosts one by one, giving a funny joke along with it, finally, after the intro segment is done, you can proceed with main podcast topic.",
         False: "DO NOT include any sort of intro segment, assume the podcast is resuming from a short commercial break"
     }
     OUTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
