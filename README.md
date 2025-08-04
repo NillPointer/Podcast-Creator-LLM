@@ -25,8 +25,8 @@ Initiates podcast generation from PDF files or Arxiv URLs.
 **Request Parameters:**
 - `files` (optional): List of PDF files to process
 - `arxiv_urls` (optional): List of Arxiv URLs to process
-- `speaker_a_voice` (optional): Voice ID for speaker A (default: from env vars)
-- `speaker_b_voice` (optional): Voice ID for speaker B (default: from env vars)
+- `speaker_a_name` (optional): Name for host A (default: from env vars)
+- `speaker_b_name` (optional): Name for host B (default: from env vars)
 
 **Response:**
 ```json
@@ -63,30 +63,6 @@ Downloads the generated podcast file.
 **Path Parameters:**
 - `filename`: Filename of the podcast to download
 
-### 4. Stream Podcast
-**GET** `/podcasts/stream/{filename}`
-
-Streams the generated podcast file.
-
-**Path Parameters:**
-- `filename`: Filename of the podcast to stream
-
-### 5. List Podcasts
-**GET** `/podcasts`
-
-Lists all generated podcasts with metadata.
-
-**Response:**
-```json
-[
-  {
-    "filename": "podcast_123.mp3",
-    "size": 1234567,
-    "created_at": "timestamp"
-  }
-]
-```
-
 ## Environment Variables
 
 The following environment variables can be configured:
@@ -99,15 +75,17 @@ The following environment variables can be configured:
 - `HOST_B_NAME`: Name for speaker B (default: "Alexander")
 
 ### LLM Settings
-- `LLM_ENDPOINT`: URL for the LLM service (default: "http://192.168.1.16:8000")
+- `LLM_API_HOST`: URL for the LLM service (default: "http://192.168.1.16:8000")
 - `LLM_MODEL`: LLM model to use (default: "Devstral-Small-1.1-FP8")
 - `LLM_TEMPERATURE`: Temperature setting for LLM (default: 0.15)
 - `LLM_TIMEOUT`: Timeout for LLM requests in seconds (default: 600)
 
 ### TTS Settings
-- `TTS_ENDPOINT`: URL for the TTS service (default: "http://192.168.1.16:8000")
+- `TTS_API_HOST`: URL for the TTS service (default: "http://192.168.1.16:8000")
+- `TTS_API_PATH`: API path (default: "/tts"), use "/v1/audio/speech" for OpenAI-Compatible endpoint
 - `TTS_MODEL`: TTS model to use (default: "Chatterbox-TTS-Server")
 - `TTS_TIMEOUT`: Timeout for TTS requests in seconds (default: 60)
+- `TTS_WAKEUP_ENDPOINT`: (Optional) API ENDPOINT that will call a GET with 60 second timeout to "wake up the server"
 
 ### System Settings
 - `AUDIO_STORAGE_PATH`: Directory to store generated audio files (default: "./audio_storage")

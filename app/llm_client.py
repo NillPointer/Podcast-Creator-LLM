@@ -9,11 +9,11 @@ logger = setup_logger('llm_client')
 
 class LLMClient:
     def __init__(self):
-        self.endpoint = f"{settings.LLM_ENDPOINT}/v1/chat/completions"
+        self.endpoint = f"{settings.LLM_API_HOST}/v1/chat/completions"
         self.system_prompt_template = settings.LLM_SYSTEM_PROMPT
 
     def generate_podcast_script(self, 
-    text_content: str, 
+    text_content: str,
     host_a_name: str, 
     host_b_name: str, 
     intro: bool, 

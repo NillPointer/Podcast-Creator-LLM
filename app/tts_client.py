@@ -1,5 +1,6 @@
 import requests
 import os
+import random
 from typing import List, Dict
 from app.config.settings import settings
 from app.logger import setup_logger
@@ -8,12 +9,18 @@ logger = setup_logger('tts_client')
 
 class TTSClient:
     def __init__(self):
-        self.endpoint = f"{settings.TTS_ENDPOINT}/v1/audio/speech"
+        self.endpoint = f"{settings.TTS_API_HOST}{settings.TTS_API_PATH}"
+        if settings.TTS_WAKEUP_ENDPOINT:
+            try:
+                requests.get(
+                    settings.TTS_WAKEUP_ENDPOINT,
+                    timeout=settings.TTS_TIMEOUT
+                )
+            except Exception:
+                pass
 
     def generate_audio_segments(self, dialogue: List[Dict[str, str]],
                               global_index: int,
-                              speaker_a_voice: str,
-                              speaker_b_voice: str,
                               temp_dir: str) -> List[str]:
         """
         Generate audio segments for each dialogue line using TTS.
@@ -21,8 +28,6 @@ class TTSClient:
         Args:
             dialogue: List of dialogue segments with speaker and text
             global_index: For multi podcast processing
-            speaker_a_voice: Voice ID for speaker A
-            speaker_b_voice: Voice ID for speaker B
             temp_dir: Temporary directory path for storing audio segments
 
         Returns:
@@ -38,15 +43,30 @@ class TTSClient:
             speaker = segment["speaker"]
             text = segment["text"]
 
+            exaggeration = 0.9
+            cfg_weight = 0.3
+            
+            if i > 0:
+                exaggeration = round(random.uniform(0.2, 0.9), 2)
+                cfg_weight = round(random.uniform(0.3, 0.7), 2)
+
             # Select voice based on speaker
-            voice = speaker_a_voice if speaker == "HOST_A" else speaker_b_voice
+            voice = settings.HOST_A_VOICE if speaker == "HOST_A" else settings.HOST_B_VOICE
 
             # Prepare the payload for TTS API
+            # Combination between OpenAI payload and TTS payload
             payload = {
                 "model": settings.TTS_MODEL,  # Use configured model
+                "text": text,
                 "input": text,
-                "voice": voice+".wav",
-                "response_format": "mp3"
+                "voice_mode": "predefined",
+                "predefined_voice_id": voice,
+                "voice": voice,
+                "output_format": "mp3",
+                "response_format": "mp3",
+                "temperature": 0.8,
+                "exaggeration": exaggeration,
+                "cfg_weight": cfg_weight
             }
 
             try:

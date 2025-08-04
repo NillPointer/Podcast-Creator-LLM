@@ -6,20 +6,22 @@ class Settings:
     ALLOWED_ORIGINS: List[str] = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
     # Podcast Settings
-    HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Jeremiah")
-    HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Alexander")
+    HOST_A_VOICE: str = os.getenv("HOST_A_VOICE", "Linus.mp3")
+    HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "Dave2d.mp3")
+    HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Linus")
+    HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Dave")
     INTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
         True: "Before discussing the topic, create a natural, friendly introduction to the podcast for the audience. It will introduce the hosts and the podcast as a whole with light banter before discussing the topic.",
         False: "DO NOT include any sort of intro segment, assume the podcast is resuming from a short commercial break"
     }
     OUTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
         True: "End with a natural wrap-up that includes some humor or personal comment",
-        False: "End conversationally as if moving to another topic"
+        False: "DO NOT include any sort of outro segment, assume the podcast is moving onto the next topic"
     }
 
     # LLM Settings
-    LLM_ENDPOINT: str = os.getenv("LLM_ENDPOINT", "http://192.168.1.16:8000")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "Devstral-Small-1.1-FP8")
+    LLM_API_HOST: str = os.getenv("LLM_API_HOST", "http://192.168.1.16:8000")
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "Mistral-Small-3.2-24B-FP8")
     LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.15"))
     LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "600"))
     LLM_SYSTEM_PROMPT: str = os.getenv(
@@ -69,14 +71,15 @@ Follow these guidelines:
         - Humorous comparisons
     - Assume the audience knows nothing about the topic
     - Keep explanations conversational - not like a lecture
-    - Balance topic coverage with entertainment (about 50/50)
+    - Balance topic coverage with entertainment (about 20 percent topic discussion, 50 percent commentary and 20 percent jokes and off-topic banter)
 
 6. **Natural Flow**:
     - Hosts should alternate speaking naturally (not rigidly)
     - Conversations should have:
         - Follow-up questions
         - Reactions to what the other said
-        - Brief pauses for effect (using commas and full stop punctuations)
+        - Lots of brief pauses (using dots `...`, full stop `.`, commas `,`)
+        - Occasional inclusion of `haha` and `um` in the text
     - Use contractions ("don't" instead of "do not") and casual language
 
 7. **Response Rules**:
@@ -110,9 +113,11 @@ Follow these guidelines:
     }
 
     # Audio Settings
-    TTS_ENDPOINT: str = os.getenv("TTS_ENDPOINT", "http://192.168.1.16:8000")
+    TTS_API_HOST: str = os.getenv("TTS_API_HOST", "http://192.168.1.16:11111")
+    TTS_API_PATH: str = os.getenv("TTS_API_PATH", "/tts") #Use /v1/audio/speech for OpenAI-Compatible Endpoint
     TTS_MODEL: str = os.getenv("TTS_MODEL", "Chatterbox-TTS-Server")
     TTS_TIMEOUT: int = int(os.getenv("TTS_TIMEOUT", "60"))
+    TTS_WAKEUP_ENDPOINT: str = os.getenv("TTS_WAKEUP_ENDPOINT")
 
     AUDIO_STORAGE_PATH: str = os.getenv("AUDIO_STORAGE_PATH", "./audio_storage")
     MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", "10485760"))  # 10MB default

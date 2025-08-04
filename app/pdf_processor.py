@@ -74,21 +74,3 @@ class PDFProcessor:
         except Exception as e:
             logger.error(f"Failed to extract text from Arxiv URL: {str(e)}")
             raise Exception(f"Failed to extract text from Arxiv URL: {str(e)}")
-
-    def validate_pdf_file(self, file_content: bytes) -> bool:
-        """
-        Validate that the file is a valid PDF.
-
-        Args:
-            file_content: Raw bytes of the file
-
-        Returns:
-            True if valid PDF, False otherwise
-        """
-        try:
-            # Check if file starts with PDF header
-            if not file_content.startswith(b'%PDF'):
-                return False
-
-        except Exception:
-            return False

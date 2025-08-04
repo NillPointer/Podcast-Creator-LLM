@@ -26,8 +26,8 @@ jobs = {}
 async def create_podcast(
     files: Optional[List[UploadFile]] = File(None),
     arxiv_urls: Optional[List[str]] = Form(None),
-    speaker_a_voice: str = settings.HOST_A_NAME,
-    speaker_b_voice: str = settings.HOST_B_NAME,
+    speaker_a_name: str = settings.HOST_A_NAME,
+    speaker_b_name: str = settings.HOST_B_NAME,
 ):
     """
     Upload PDF files and Arxiv URLs to initiate podcast generation.
@@ -64,11 +64,6 @@ async def create_podcast(
             content = await file.read()
             logger.debug(f"Successfully read file content. Size: {len(content)} bytes")
 
-            # Validate PDF
-            if not validate_pdf_file(content):
-                logger.warning("Invalid PDF file detected")
-                raise HTTPException(status_code=400, detail="Invalid PDF file")
-
             file_contents.append(content)
 
     # Validate Arxiv URLs
@@ -98,7 +93,7 @@ async def create_podcast(
     # Start processing in a new thread
     threading.Thread(
         target=process_podcast_job,
-        args=(job_id, file_contents, valid_arxiv_urls, speaker_a_voice, speaker_b_voice),
+        args=(job_id, file_contents, valid_arxiv_urls, speaker_a_name, speaker_b_name),
         daemon=True
     ).start()
 
@@ -159,31 +154,6 @@ async def download_podcast(filename: str = Path(..., title="Filename of the podc
         filename=filename
     )
 
-@router.get("/podcasts/stream/{filename}")
-async def stream_podcast(filename: str = Path(..., title="Filename of the podcast to stream")):
-    """
-    Stream the generated podcast file.
-
-    Args:
-        filename: Filename of the podcast to stream
-
-    Returns:
-        Streaming response for MP3 file
-    """
-    # Construct the full path
-    file_path = os.path.join(settings.AUDIO_STORAGE_PATH, filename)
-
-    if not os.path.exists(file_path):
-        logger.warning(f"File not found: {file_path}")
-        raise HTTPException(status_code=404, detail="File not found")
-
-    logger.info(f"Initiating streaming for file: {filename}")
-    return FileResponse(
-        file_path,
-        media_type="audio/mpeg",
-        filename=filename
-    )
-
 @router.get("/podcasts")
 async def list_podcasts():
     """
@@ -226,7 +196,7 @@ async def list_podcasts():
         raise HTTPException(status_code=500, detail="Error listing podcasts")
 
 def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: List[str],
-                      speaker_a_voice: str, speaker_b_voice: str):
+                      speaker_a_name: str, speaker_b_name: str):
     """
     Background task to process podcast generation for PDFs and Arxiv URLs.
 
@@ -293,8 +263,8 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
                 logger.debug(f"Generating script for source {index + 1}/{total_sources} for job: {job_id}")
                 dialogue = llm_client.generate_podcast_script(
                     text_content,
-                    speaker_a_voice,
-                    speaker_b_voice,
+                    speaker_a_name,
+                    speaker_b_name,
                     intro,
                     outro,
                     tmpdirname)
@@ -311,8 +281,6 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
                 audio_files = tts_client.generate_audio_segments(
                     dialogue,
                     index,
-                    speaker_a_voice,
-                    speaker_b_voice,
                     tmpdirname
                 )
                 logger.debug(f"Successfully generated audio for source {index + 1}/{total_sources} for job: {job_id}")

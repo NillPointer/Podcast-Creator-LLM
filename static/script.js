@@ -182,8 +182,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Append other form fields
-    formData.append('speaker_a_voice', document.getElementById('speakerAVoice').value);
-    formData.append('speaker_b_voice', document.getElementById('speakerBVoice').value);
+    formData.append('speaker_a_name', document.getElementById('speakerAName').value);
+    formData.append('speaker_b_name', document.getElementById('speakerBName').value);
 
     try {
       // Upload file and start processing
@@ -213,14 +213,9 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   async function monitorProgress(jobId) {
-    const MAX_POLL_ATTEMPTS = 36; // 3 minute max polling time per status
-    let pollAttempts = 0;
     const POLL_INTERVAL = 5000; // 5 second between polls
 
-    // Store previous status to detect changes
-    let previousStatus = null;
-
-    while (pollAttempts < MAX_POLL_ATTEMPTS) {
+    while (true) {
       try {
         const response = await fetch(`/api/v1/podcasts/status/${jobId}`);
         const result = await response.json();
@@ -231,13 +226,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Update UI with detailed status information
         updateProgressUI(result);
-
-        // Check for status changes
-        if (previousStatus !== result.status) {
-          console.log(`Job status changed to: ${result.status}`);
-          previousStatus = result.status;
-          pollAttempts = 0
-        }
 
         if (result.status === 'completed') {
           // Show download link
@@ -251,9 +239,6 @@ document.addEventListener('DOMContentLoaded', function () {
         } else if (result.status === 'failed') {
           throw new Error(result.error || 'Processing failed');
         }
-
-        // Increment poll attempts and wait before next check
-        pollAttempts++;
         await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
 
       } catch (error) {
@@ -266,16 +251,6 @@ document.addEventListener('DOMContentLoaded', function () {
         submitBtn.textContent = 'Create Podcast';
         break;
       }
-    }
-
-    // If we exit the loop without completion, show a timeout message
-    if (pollAttempts >= MAX_POLL_ATTEMPTS) {
-      statusMessage.textContent = 'Processing timed out. Please try again later.';
-      statusMessage.className = 'warning';
-      statusMessage.style.display = 'block';
-      progressContainer.style.display = 'none';
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Create Podcast';
     }
   }
 
@@ -426,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Create source element
     const source = document.createElement('source');
-    source.src = `/api/v1/podcasts/stream/${filename}`;
+    source.src = `/api/v1/podcasts/download/${filename}`;
     source.type = 'audio/mpeg';
 
     // Append source to audio

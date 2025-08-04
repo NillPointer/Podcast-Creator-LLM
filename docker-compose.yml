@@ -9,6 +9,7 @@ services:
     environment:
       - AUDIO_STORAGE_PATH=/app/audio_storage
       - MAX_FILE_SIZE=10485760
+      - TTS_WAKEUP_ENDPOINT=http://192.168.1.16:8000/upstream/Chatterbox-TTS-Server
     volumes:
       - ./audio_storage:/app/audio_storage
       - ./static:/app/static
