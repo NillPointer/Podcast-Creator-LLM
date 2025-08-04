@@ -43,14 +43,13 @@ class TTSClient:
             speaker = segment["speaker"]
             text = segment["text"]
 
-            exaggeration = 0.9
-            cfg_weight = 0.3
-            temperature = 0.8
+            exaggeration = 0.8
+            cfg_weight = 0.8
+            temperature = 0.7
             
             if i > 0:
-                temperature = round(random.uniform(0.65,0.85),2)
-                exaggeration = round(random.uniform(0.35, 0.9), 2)
-                cfg_weight = round(random.uniform(0.35, 0.7), 2)
+                exaggeration = round(random.uniform(0.5, 0.9), 2)
+                cfg_weight = round(random.uniform(0.4, 0.9), 2)
 
             # Select voice based on speaker
             voice = settings.HOST_A_VOICE if speaker == "HOST_A" else settings.HOST_B_VOICE
