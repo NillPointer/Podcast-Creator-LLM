@@ -267,7 +267,7 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
                 jobs[job_id]["progress"] += progress_increment
 
             # Process Arxiv URLs
-            for index, url in enumerate(arxiv_urls, start=len(file_contents)):
+            for index, url in enumerate(arxiv_urls):
                 logger.debug(f"Extracting text from Arxiv URL {index + 1}/{total_sources} for job: {job_id}")
                 text_content = pdf_processor.extract_text_from_arxiv(url)
                 logger.debug(f"Successfully extracted text from Arxiv URL {index + 1}/{total_sources} for job: {job_id}")
@@ -294,8 +294,7 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
                     speaker_a_name,
                     speaker_b_name,
                     intro,
-                    outro,
-                    tmpdirname)
+                    outro)
                 logger.debug(f"Successfully generated script for source {index + 1}/{total_sources} for job: {job_id}")
                 all_dialogues.append(dialogue)
                 jobs[job_id]["progress"] += progress_increment

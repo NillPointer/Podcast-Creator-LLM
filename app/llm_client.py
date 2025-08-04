@@ -17,8 +17,7 @@ class LLMClient:
     host_a_name: str, 
     host_b_name: str, 
     intro: bool, 
-    outro:bool, 
-    temp_dir: str) -> List[Dict[str, str]]:
+    outro:bool) -> List[Dict[str, str]]:
         """
         Send text content to LLM and get podcast script.
 
@@ -28,7 +27,6 @@ class LLMClient:
             host_b_name: Name for Host_B
             intro: Enable Intro segment
             outro: Enable Outro segment
-            temp_dir: Temporary directory for debug
 
         Returns:
             List of dialogue segments with speaker and text
@@ -42,7 +40,7 @@ class LLMClient:
         system_prompt = system_prompt.replace("$INTRO_SEGMENT", settings.INTRO_SEGMENT_INSTRUCTIONS[intro])
         system_prompt = system_prompt.replace("$OUTRO_SEGMENT", settings.OUTRO_SEGMENT_INSTRUCTIONS[outro])
 
-        logger.info(f"Using System Prompt: {system_prompt}")
+        logger.debug(f"Using System Prompt: {system_prompt}")
 
         # Prepare the payload for the LLM API with system and user messages
         payload = {
@@ -85,8 +83,6 @@ class LLMClient:
                         json_content = content.strip()
 
                     parsed_response = json.loads(json_content)
-                    with open(f'{temp_dir}.json', 'w', encoding='utf-8') as f:
-                        json.dump(parsed_response, f, ensure_ascii=False, indent=4)
                     return parsed_response.get("dialogue", [])
                 except json.JSONDecodeError:
                     raise Exception("Invalid LLM response format")

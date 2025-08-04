@@ -21,17 +21,19 @@ class Settings:
         then introducing the hosts one by one, giving a funny joke along with it, finally, 
         after the intro segment is done, you can proceed with main podcast topic.""",
         False: """DO NOT include any sort of intro segment, 
-        assume the podcast is resuming from a short commercial break"""
+        assume the podcast is resuming a previous topic and is resuming with this next topic"""
     }
     OUTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
         True: "YOU MUST end the podcast with a natural wrap-up that includes some humor",
-        False: "DO NOT include any sort of outro segment, assume the podcast is moving onto the next topic"
+        False: """DO NOT include any sort of outro segment, assume the podcast is moving onto the next topic,
+        For example "Ok, let move ontop the next topic" [STOP HERE]
+        """
     }
 
     # LLM Settings
     LLM_API_HOST: str = os.getenv("LLM_API_HOST", "http://192.168.1.16:8000")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "Mistral-Small-3.2-24B-FP8")
-    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.15"))
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "Cydonia-24B-v4-Q6_K_L")
+    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.7"))
     LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "600"))
     LLM_SYSTEM_PROMPT: str = os.getenv(
         "LLM_SYSTEM_PROMPT",
@@ -101,6 +103,7 @@ Follow these guidelines:
 9. **Natural Flow**:
     - Hosts should alternate speaking naturally (not rigidly)
     - Hosts should avoid speaking single words such as "right", "ok", "yep", "great", etc. The response should sound natural and not forced or robotic
+    - Host should avoid phrases like "and let me tell you"
     - Hosts should have ideally differing opinions to each other which they can discuss, argue about and elaborate on (NOTE: by the end of the podcast these differences DO NOT need to be resolved!)
     - Conversations should have:
         - Follow-up questions
@@ -147,5 +150,6 @@ Follow these guidelines:
 
     AUDIO_STORAGE_PATH: str = os.getenv("AUDIO_STORAGE_PATH", "./audio_storage")
     MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", "10485760"))  # 10MB default
+    MAX_CHARACTER_SIZE: int = int(os.getenv("MAX_CHARACTER_SIZE", "92000")) # Max characters for LLM processing
 
 settings = Settings()
