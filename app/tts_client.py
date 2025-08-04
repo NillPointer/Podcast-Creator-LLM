@@ -48,9 +48,9 @@ class TTSClient:
             temperature = 0.8
             
             if i > 0:
-                temperature = round(random.uniform(0.6,0.85),2)
-                exaggeration = round(random.uniform(0.4, 1.0), 2)
-                cfg_weight = round(random.uniform(0.4, 0.7), 2)
+                temperature = round(random.uniform(0.65,0.85),2)
+                exaggeration = round(random.uniform(0.35, 0.9), 2)
+                cfg_weight = round(random.uniform(0.35, 0.7), 2)
 
             # Select voice based on speaker
             voice = settings.HOST_A_VOICE if speaker == "HOST_A" else settings.HOST_B_VOICE
