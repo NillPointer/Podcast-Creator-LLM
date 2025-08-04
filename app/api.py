@@ -154,6 +154,32 @@ async def download_podcast(filename: str = Path(..., title="Filename of the podc
         filename=filename
     )
 
+@router.delete("/podcasts/delete/{filename}")
+async def delete_podcast(filename: str = Path(..., title="Filename of the podcast to delete")):
+    """
+    Delete a generated podcast file.
+
+    Args:
+        filename: Filename of the podcast to delete
+
+    Returns:
+        Success message if file was deleted, 404 if file doesn't exist
+    """
+    # Construct the full path
+    file_path = os.path.join(settings.AUDIO_STORAGE_PATH, filename)
+
+    if not os.path.exists(file_path):
+        logger.warning(f"File not found for deletion: {file_path}")
+        raise HTTPException(status_code=404, detail="File not found")
+
+    try:
+        os.remove(file_path)
+        logger.info(f"Successfully deleted file: {filename}")
+        return {"detail": "File deleted successfully"}
+    except Exception as e:
+        logger.error(f"Error deleting file {filename}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error deleting file")
+
 @router.get("/podcasts")
 async def list_podcasts():
     """
@@ -189,7 +215,9 @@ async def list_podcasts():
                 "created_at": created_at
             })
 
-        return podcasts
+        # Sort podcasts by created_at in descending order (newest first)
+        sorted_podcasts = sorted(podcasts, key=lambda x: x['created_at'], reverse=True)
+        return sorted_podcasts
 
     except Exception as e:
         logger.error(f"Error listing podcasts: {str(e)}", exc_info=True)
@@ -290,7 +318,7 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
             # Step 4: Stitch all audio segments into final output
             logger.info(f"Stitching all audio segments for job: {job_id}")
             stitcher = AudioStitcher()
-            output_filename = f"podcast_{job_id}.mp3"
+            output_filename = f"podcast_{datetime.utcnow().strftime('%Y%m%d%H%M')}.mp3"
             output_file = stitcher.stitch_audio_segments(
                 all_audio_files, output_filename
             )

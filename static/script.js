@@ -353,8 +353,11 @@ document.addEventListener('DOMContentLoaded', function () {
               <i class="play-icon">▶</i>
             </button>
             <a class="podcast-download" href="/api/v1/podcasts/download/${encodeURIComponent(podcast.filename)}" download>
-              <i class="download-icon">⬇</i> Download
+              <i class="download-icon">⬇</i>
             </a>
+            <button class="podcast-delete" data-filename="${encodeURIComponent(podcast.filename)}">
+              <i class="delete-icon">×</i>
+            </button>
           </div>
         `;
 
@@ -363,6 +366,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     podcastListContainer.style.display = 'block';
 
+    // Add event listeners for delete buttons
+    document.querySelectorAll('.podcast-delete').forEach(button => {
+      button.addEventListener('click', handleDeleteButtonClick);
+    });
     // Add event listeners for play buttons
     document.querySelectorAll('.podcast-play').forEach(button => {
       button.addEventListener('click', handlePlayButtonClick);
@@ -422,6 +429,10 @@ document.addEventListener('DOMContentLoaded', function () {
       updatePlayButtonState(this, false);
     });
 
+    audio.addEventListener('seeking', () => {
+      updatePlayButtonState(this, true);
+    });
+
     audio.addEventListener('ended', () => {
       updatePlayButtonState(this, false);
     });
@@ -443,6 +454,40 @@ document.addEventListener('DOMContentLoaded', function () {
         audio.pause();
         audio.remove();
       }
+    }
+  }
+
+  // Function to handle delete button clicks
+  async function handleDeleteButtonClick() {
+    const filename = this.getAttribute('data-filename');
+
+    try {
+      const response = await fetch(`/api/v1/podcasts/delete/${filename}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.detail || 'Failed to delete podcast');
+      }
+
+      // Refresh the podcast list
+      await fetchPodcastList();
+
+      // Show success message
+      statusMessage.textContent = 'Podcast deleted successfully!';
+      statusMessage.className = 'success';
+      statusMessage.style.display = 'block';
+
+      setTimeout(() => {
+        statusMessage.style.display = 'none';
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error deleting podcast:', error);
+      statusMessage.textContent = `Error: ${error.message}`;
+      statusMessage.className = 'error';
+      statusMessage.style.display = 'block';
     }
   }
 

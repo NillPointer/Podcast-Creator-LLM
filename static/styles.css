@@ -317,6 +317,26 @@
     background-color: #219653;
   }
 
+  .podcast-delete {
+    display: inline-flex;
+    align-items: center;
+    background-color: #e74c3c;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    transition: background-color 0.3s;
+    cursor: pointer;
+  }
+
+  .podcast-delete:hover {
+    background-color: #c0392b;
+  }
+
+  .podcast-delete i {
+    margin-right: 5px;
+  }
+
   .podcast-download i {
     margin-right: 5px;
   }
