@@ -73,13 +73,16 @@ Follow these guidelines:
         - Relatable examples
         - Humorous comparisons
     - Keep the use of similes to a minimum, prefer metaphors over similes
-        - Avoid "
+        - Avoid phrases such as "it's like my", etc.
+    - Avoid single word lines per host interaction (such as a host respondingly simply with "right" or "ok")
     - Assume the audience knows nothing about the topic
     - Keep explanations conversational - not like a lecture
     - Balance topic coverage with entertainment (50/50)
 
 7. **Natural Flow**:
     - Hosts should alternate speaking naturally (not rigidly)
+    - Hosts should avoid speaking single words such as "right", "ok", "yep", "great", etc. The response should sound natural and not forced or robotic
+    - Hosts should have ideally differing opinions to each other which they can discuss, argue about and elaborate on (NOTE: by the end of the podcast these differences DO NOT need to be resolved!)
     - Conversations should have:
         - Follow-up questions
         - Reactions to what the other said
