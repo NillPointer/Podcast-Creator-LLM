@@ -5,7 +5,7 @@ services:
     build: .
     container_name: podcast-creator
     ports:
-      - "8002:8000"
+      - "3000:8000"
     environment:
       - AUDIO_STORAGE_PATH=/app/audio_storage
       - MAX_FILE_SIZE=10485760
