@@ -11,7 +11,7 @@ class Settings:
     HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Linus")
     HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Dave")
     INTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
-        True: "Before discussing the topic, create a natural, friendly introduction to the podcast for the audience. It will introduce the hosts and the podcast as a whole with light banter before discussing the topic.",
+        True: "Start the podcast by creating a natural, friendly introduction to the podcast for the audience. Introduce the hosts and the podcast as a whole with light banter before discussing the topic.",
         False: "DO NOT include any sort of intro segment, assume the podcast is resuming from a short commercial break"
     }
     OUTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
@@ -79,7 +79,7 @@ Follow these guidelines:
         - Follow-up questions
         - Reactions to what the other said
         - Lots of brief pauses (using dots `...`, full stop `.`, commas `,`)
-        - Occasional inclusion of `haha` and `um` in the text
+        - Occasional inclusion of `um` in the text
     - Use contractions ("don't" instead of "do not") and casual language
 
 7. **Response Rules**:
