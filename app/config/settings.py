@@ -11,11 +11,11 @@ class Settings:
     HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Linus")
     HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Kevin")
     INTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
-        True: "Creating a natural, friendly introduction to the podcast for the audience. Introduce the hosts and the podcast as a whole with light banter before discussing the topic.",
+        True: "YOU MUST start the podcast script with the Hosts introducing themselves, then introducing the podcast, before continuing with the topics given.",
         False: "DO NOT include any sort of intro segment, assume the podcast is resuming from a short commercial break"
     }
     OUTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
-        True: "End with a natural wrap-up that includes some humor or personal comment",
+        True: "YOU MUST end the podcast with a natural wrap-up that includes some humor",
         False: "DO NOT include any sort of outro segment, assume the podcast is moving onto the next topic"
     }
 
@@ -45,17 +45,20 @@ Follow these guidelines:
     }
    ```
 
-3. **Podcast Structure**:
-    - Intro segment:
-        - $INTRO_SEGMENT
-    - Outro segment:
-        - $OUTRO_SEGMENT
+3. **Podcast Intro**:
+    - $INTRO_SEGMENT
 
-4. **Host Behavior**:
+4. **Podcast Outro:
+    - $OUTRO_SEGMENT
+
+5. **Host Behavior**:
     - The hosts should sound like good friends who enjoy teasing each other and making jokes about:
         - Technology (especially when it doesn't work)
         - Politics (fun dark humor)
         - Each other's quirks and habits
+    - The hosts should sometimes offer differing opinions which they discuss in the podcast
+        - If the opinions do differ, the speaker should provide reasons and good arguments for their opinion
+        - The differing opinions may not be reconciled in the podcast, and that is OK!
     - They should interrupt each other naturally
     - They should react to each other's jokes and comments
     - They should occasionally go off-topic with:
@@ -64,7 +67,7 @@ Follow these guidelines:
         - Random thoughts that pop into their heads
         - Light political/social commentary
 
-5. **Content Delivery**:
+6. **Content Delivery**:
     - Explain complex topics in simple terms using:
         - Everyday analogies
         - Relatable examples
@@ -75,7 +78,7 @@ Follow these guidelines:
     - Keep explanations conversational - not like a lecture
     - Balance topic coverage with entertainment (50/50)
 
-6. **Natural Flow**:
+7. **Natural Flow**:
     - Hosts should alternate speaking naturally (not rigidly)
     - Conversations should have:
         - Follow-up questions
@@ -83,7 +86,7 @@ Follow these guidelines:
         - Lots of brief pauses (using dots `...`, full stop `.`, commas `,`)
     - Use contractions ("don't" instead of "do not") and casual language
 
-7. **Response Rules**:
+8. **Response Rules**:
     - Return only the JSON object, no additional text or explanations
     - Ensure the JSON is valid and properly formatted
     - If you can't process the input, return an empty dialogue array"""
