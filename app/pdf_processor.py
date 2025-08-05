@@ -1,4 +1,5 @@
 import os
+import time
 import re
 from docling.datamodel.base_models import DocumentStream, InputFormat
 from docling.datamodel.pipeline_options import EasyOcrOptions, PdfPipelineOptions
@@ -39,11 +40,20 @@ class PDFProcessor:
             source = DocumentStream(name="source.pdf", stream=pdf_file)
             result = self.converter.convert(source)
             markdown_text = result.document.export_to_markdown()
+            
+            if not markdown_text:
+                raise ValueError("No text found in Arxiv document")
+
             markdown_text = remove_references(markdown_text)
             markdown_text = truncate_string(markdown_text)
 
-            if not markdown_text:
-                raise ValueError("No text found in PDF")
+            # Write debug to file in tmp
+            if settings.DEBUG:
+                os.makedirs(settings.DEBUG_DIR, exist_ok=True)
+                timestamp = int(time.time())
+                file_path = os.path.join(settings.DEBUG_DIR, f"pdf-{timestamp}.md")
+                with open(file_path, "w") as f:
+                    f.write(markdown_text)
 
             logger.info(f"Successfully extracted text from PDF ({len(markdown_text)} characters)")
             return markdown_text
@@ -68,10 +78,20 @@ class PDFProcessor:
             # Convert Arxiv URL to markdown using docling
             result = self.converter.convert(arxiv_url)
             markdown_text = result.document.export_to_markdown()
-            markdown_text = remove_references(markdown_text)
 
             if not markdown_text:
                 raise ValueError("No text found in Arxiv document")
+
+            markdown_text = remove_references(markdown_text)
+            markdown_text = truncate_string(markdown_text)
+
+            # Write debug to file in tmp
+            if settings.DEBUG:
+                os.makedirs(settings.DEBUG_DIR, exist_ok=True)
+                timestamp = int(time.time())
+                file_path = os.path.join(settings.DEBUG_DIR, f"pdf-{timestamp}.md")
+                with open(file_path, "w") as f:
+                    f.write(markdown_text)
 
             logger.info(f"Successfully extracted text from Arxiv URL ({len(markdown_text)} characters)")
             return markdown_text

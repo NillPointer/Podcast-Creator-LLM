@@ -1,6 +1,5 @@
 import requests
 import os
-import random
 from typing import List, Dict
 from app.config.settings import settings
 from app.logger import setup_logger
@@ -82,6 +81,13 @@ class TTSClient:
                 # Save the audio data
                 with open(filepath, "wb") as f:
                     f.write(response.content)
+
+                # Write debug to file in tmp
+                if settings.DEBUG:
+                    os.makedirs(settings.DEBUG_DIR, exist_ok=True)
+                    file_path = os.path.join(settings.DEBUG_DIR, filename)
+                    with open(file_path, "wb") as f:
+                        f.write(response.content)
 
                 audio_files.append(filepath)
 

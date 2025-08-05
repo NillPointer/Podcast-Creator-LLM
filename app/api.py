@@ -25,9 +25,7 @@ jobs = {}
 @router.post("/podcasts")
 async def create_podcast(
     files: Optional[List[UploadFile]] = File(None),
-    arxiv_urls: Optional[List[str]] = Form(None),
-    speaker_a_name: str = settings.HOST_A_NAME,
-    speaker_b_name: str = settings.HOST_B_NAME,
+    arxiv_urls: Optional[List[str]] = Form(None)
 ):
     """
     Upload PDF files and Arxiv URLs to initiate podcast generation.
@@ -35,8 +33,6 @@ async def create_podcast(
     Args:
         files: List of PDF files to process
         arxiv_urls: List of Arxiv URLs to process
-        speaker_a_voice: Voice ID for speaker A
-        speaker_b_voice: Voice ID for speaker B
 
     Returns:
         Job information with status
@@ -93,7 +89,7 @@ async def create_podcast(
     # Start processing in a new thread
     threading.Thread(
         target=process_podcast_job,
-        args=(job_id, file_contents, valid_arxiv_urls, speaker_a_name, speaker_b_name),
+        args=(job_id, file_contents, valid_arxiv_urls),
         daemon=True
     ).start()
 
@@ -223,8 +219,7 @@ async def list_podcasts():
         logger.error(f"Error listing podcasts: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Error listing podcasts")
 
-def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: List[str],
-                      speaker_a_name: str, speaker_b_name: str):
+def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: List[str]):
     """
     Background task to process podcast generation for PDFs and Arxiv URLs.
 
@@ -232,8 +227,6 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
         job_id: Unique identifier for the job
         file_contents: List of PDF file contents
         arxiv_urls: List of Arxiv URLs
-        speaker_a_voice: Voice ID for speaker A
-        speaker_b_voice: Voice ID for speaker B
     """
     with tempfile.TemporaryDirectory() as tmpdirname:
         try:
@@ -285,16 +278,16 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
                 outro = False
                 if index == 0:  # First source
                     intro = True
-                elif index == total_sources - 1:  # Last source
+                elif index == len(text_contents) - 1:  # Last source
                     outro = True
 
                 logger.debug(f"Generating script for source {index + 1}/{total_sources} for job: {job_id}")
+                podcast_content = llm_client.summarize_podcast_text(text_content)
                 dialogue = llm_client.generate_podcast_script(
-                    text_content,
-                    speaker_a_name,
-                    speaker_b_name,
+                    podcast_content,
                     intro,
                     outro)
+                dialogue = llm_client.refine_podcast_script(dialogue)
                 logger.debug(f"Successfully generated script for source {index + 1}/{total_sources} for job: {job_id}")
                 all_dialogues.append(dialogue)
                 jobs[job_id]["progress"] += progress_increment

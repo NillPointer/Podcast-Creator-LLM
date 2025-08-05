@@ -181,10 +181,6 @@ document.addEventListener('DOMContentLoaded', function () {
       formData.append('arxiv_urls', url);
     });
 
-    // Append other form fields
-    formData.append('speaker_a_name', document.getElementById('speakerAName').value);
-    formData.append('speaker_b_name', document.getElementById('speakerBName').value);
-
     try {
       // Upload file and start processing
       const response = await fetch('/api/v1/podcasts', {

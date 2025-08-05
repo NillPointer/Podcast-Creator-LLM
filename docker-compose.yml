@@ -13,6 +13,7 @@ services:
     volumes:
       - ./audio_storage:/app/audio_storage
       - ./static:/app/static
+      - ./tmp:/app/tmp
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
