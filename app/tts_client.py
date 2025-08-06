@@ -19,14 +19,14 @@ class TTSClient:
                 pass
 
     def generate_audio_segments(self, dialogue: List[Dict[str, str]],
-                              global_index: int,
+                              job: Dict,
                               temp_dir: str) -> List[str]:
         """
         Generate audio segments for each dialogue line using TTS.
 
         Args:
             dialogue: List of dialogue segments with speaker and text
-            global_index: For multi podcast processing
+            job: Job process
             temp_dir: Temporary directory path for storing audio segments
 
         Returns:
@@ -37,6 +37,7 @@ class TTSClient:
         """
 
         audio_files = []
+        progress_increment = 40 / len(dialogue)
 
         for i, segment in enumerate(dialogue):
             speaker = segment["speaker"]
@@ -75,7 +76,7 @@ class TTSClient:
                 response.raise_for_status()
 
                 # Save the audio file
-                filename = f"segment_{global_index}_{i+1:03d}.mp3"
+                filename = f"segment_{i+1:03d}.mp3"
                 filepath = os.path.join(temp_dir, filename)
 
                 # Save the audio data
@@ -90,6 +91,7 @@ class TTSClient:
                         f.write(response.content)
 
                 audio_files.append(filepath)
+                job["progress"] += progress_increment
 
             except requests.exceptions.RequestException as e:
                 raise Exception(f"TTS API request failed for segment {i}: {str(e)}")

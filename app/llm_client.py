@@ -1,5 +1,6 @@
 import requests
 import json
+import random
 import os
 import time
 from typing import List, Dict, Any
@@ -11,6 +12,127 @@ logger = setup_logger('llm_client')
 class LLMClient:
     def __init__(self):
         self.endpoint = f"{settings.LLM_API_HOST}/v1/chat/completions"
+    
+    def _make_llm_request(self, 
+    system_prompt: str, 
+    user_content: str, 
+    temperature: float = settings.LLM_TEMPERATURE) -> str:
+        """
+        Helper function to make LLM API requests with consistent error handling.
+        
+        Args:
+            system_prompt: The system prompt for the LLM
+            user_content: The user content to send to the LLM
+            temperature: Temperature setting for the LLM
+            
+        Returns:
+            Response text from the LLM
+            
+        Raises:
+            Exception: If LLM request fails
+        """
+        payload = {
+            "model": settings.LLM_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content}
+            ],
+            "temperature": temperature,
+            "stream": False
+        }
+        
+        try:
+            response = requests.post(
+                self.endpoint,
+                json=payload,
+                timeout=settings.LLM_TIMEOUT
+            )
+            
+            response.raise_for_status()
+            result = response.json()
+            
+            if "choices" in result and len(result["choices"]) > 0:
+                content = result["choices"][0]["message"]["content"].strip()
+                
+                # Write debug to file in tmp
+                if settings.DEBUG:
+                    os.makedirs(settings.DEBUG_DIR, exist_ok=True)
+                    timestamp = int(time.time())
+                    file_path = os.path.join(settings.DEBUG_DIR, f"llm-podcast-{timestamp}.txt")
+                    with open(file_path, "w") as f:
+                        f.write(content)
+                
+                return content
+            else:
+                raise Exception("Invalid LLM response format")
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"LLM API request failed: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Error processing LLM response: {str(e)}")
+    
+    def _llm_chat(self, 
+    system_prompt: str, 
+    user_content: str, 
+    llm_chat: List[Dict[str, str]], 
+    temperature: float = settings.LLM_TEMPERATURE) -> (str, List[Dict[str, str]]):
+        """
+        Helper function to make LLM API requests with consistent error handling.
+        
+        Args:
+            system_prompt: The system prompt for the LLM
+            user_content: The user content to send to the LLM
+            llm_chat: User - Assistant chat thus far
+            temperature: Temperature setting for the LLM
+            
+        Returns:
+            Response text from the LLM
+            
+        Raises:
+            Exception: If LLM request fails
+        """
+
+        llm_chat.append({"role": "user", "content": user_content})
+
+        payload = {
+            "model": settings.LLM_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt}
+            ],
+            "temperature": temperature,
+            "stream": False
+        }
+
+        payload["messages"].extend(llm_chat)
+
+        try:
+            response = requests.post(
+                self.endpoint,
+                json=payload,
+                timeout=settings.LLM_TIMEOUT
+            )
+            
+            response.raise_for_status()
+            result = response.json()
+            
+            if "choices" in result and len(result["choices"]) > 0:
+                content = result["choices"][0]["message"]["content"].strip()
+                llm_chat.append({"role": "assistant", "content": content})
+                
+                # Write debug to file in tmp
+                if settings.DEBUG:
+                    os.makedirs(settings.DEBUG_DIR, exist_ok=True)
+                    timestamp = int(time.time())
+                    file_path = os.path.join(settings.DEBUG_DIR, f"llm-chat-{timestamp}.txt")
+                    with open(file_path, "w") as f:
+                        f.write(content)
+                
+                return content, llm_chat
+            else:
+                raise Exception("Invalid LLM response format")
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"LLM API request failed: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Error processing LLM response: {str(e)}")
 
     def summarize_podcast_text(self, text_content: str) -> str:
         """
@@ -29,62 +151,14 @@ class LLMClient:
             return text_content
 
         logger.debug(f"Using Summarizer System Prompt: {settings.LLM_SUMMARY_SYSTEM_PROMPT}")
+        return self._make_llm_request(settings.LLM_SUMMARY_SYSTEM_PROMPT, text_content, settings.LLM_TEMPERATURE)
 
-        # Prepare the payload for the LLM API with system and user messages
-        payload = {
-            "model": settings.LLM_MODEL,  # Use configured model
-            "messages": [
-                {"role": "system", "content": settings.LLM_SUMMARY_SYSTEM_PROMPT},
-                {"role": "user", "content": text_content}
-            ],
-            "temperature": settings.LLM_TEMPERATURE,
-            "stream": False
-        }
-        
-        try:
-            # Send request to LLM endpoint
-            response = requests.post(
-                self.endpoint,
-                json=payload,
-                timeout=settings.LLM_TIMEOUT
-            )
-
-            response.raise_for_status()
-
-            # Parse the response
-            result = response.json()
-
-            # Extract the content from the LLM response
-            if "choices" in result and len(result["choices"]) > 0:
-                summary_text = result["choices"][0]["message"]["content"]
-
-                # Write debug to file in tmp
-                if settings.DEBUG:
-                    os.makedirs(settings.DEBUG_DIR, exist_ok=True)
-                    timestamp = int(time.time())
-                    file_path = os.path.join(settings.DEBUG_DIR, f"llm-summary-{timestamp}.txt")
-                    with open(file_path, "w") as f:
-                        f.write(summary_text)
-
-                return summary_text
-            else:
-                raise Exception("Invalid LLM response format")
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"LLM API request failed: {str(e)}")
-        except Exception as e:
-            raise Exception(f"Error processing LLM response: {str(e)}")
-
-    def generate_podcast_script(self, 
-    text_content: str,
-    intro: bool, 
-    outro:bool) -> List[Dict[str, str]]:
+    def generate_podcast_script(self, topics_text: List[str], job: Dict) -> List[Dict[str, str]]:
         """
-        Send text content to LLM and get podcast script.
-
+        Generate podcast script by alternating between HOST_A and HOST_B perspectives.
+        
         Args:
-            text_content: The text content to convert to podcast format
-            intro: Enable Intro segment
-            outro: Enable Outro segment
+            topics_text: List of text content topics to convert to podcast format
 
         Returns:
             List of dialogue segments with speaker and text
@@ -92,149 +166,97 @@ class LLMClient:
         Raises:
             Exception: If LLM request fails
         """
-        # Prepare the system prompt with dynamic values
-        podcast_system_prompt = settings.LLM_PODCAST_SYSTEM_PROMPT.replace("$INTRO_SEGMENT", settings.INTRO_SEGMENT_INSTRUCTIONS[intro])
-        podcast_system_prompt = podcast_system_prompt.replace("$OUTRO_SEGMENT", settings.OUTRO_SEGMENT_INSTRUCTIONS[outro])
+        # Start with HOST_A as the first speaker
+        current_speaker = "HOST_A"
+        dialogue = []
+        host_a_chat = []
+        host_b_chat = []
 
-        logger.debug(f"Using Podcast System Prompt: {podcast_system_prompt}")
+        host_a_prompt = settings.HOST_PODCAST_PROMPT.replace("$HOST_NAME", settings.HOST_A_NAME)
+        host_a_prompt = host_a_prompt.replace("$COHOST_NAME", settings.HOST_B_NAME)
+        host_a_prompt = host_a_prompt.replace("$HOST_PERSONALITY", settings.HOST_A_PERSONALITY)
 
-        # Prepare the payload for the LLM API with system and user messages
-        payload = {
-            "model": settings.LLM_MODEL,  # Use configured model
-            "messages": [
-                {"role": "system", "content": podcast_system_prompt},
-                {"role": "user", "content": text_content}
-            ],
-            "temperature": settings.LLM_TEMPERATURE,
-            "stream": False,
-            "response_format": settings.LLM_PODCAST_RESPONSE_FORMAT  # Use the response format from settings
-        }
+        host_b_prompt = settings.HOST_PODCAST_PROMPT.replace("$HOST_NAME", settings.HOST_B_NAME)
+        host_b_prompt = host_b_prompt.replace("$COHOST_NAME", settings.HOST_A_NAME)
+        host_b_prompt = host_b_prompt.replace("$HOST_PERSONALITY", settings.HOST_B_PERSONALITY)
+        current_speaker = "HOST_A"
 
-        try:
-            # Send request to LLM endpoint
-            response = requests.post(
-                self.endpoint,
-                json=payload,
-                timeout=settings.LLM_TIMEOUT
-            )
+        exchanges_per_topic = []
+        total_exchanges = 0
 
-            response.raise_for_status()
-
-            # Parse the response
-            result = response.json()
-
-            # Extract the content from the LLM response
-            if "choices" in result and len(result["choices"]) > 0:
-                content = result["choices"][0]["message"]["content"]
-
-                # Try to parse the JSON from the LLM response
-                try:
-                    # Extract JSON from the response (in case it's wrapped in markdown or other formatting)
-                    if "```json" in content:
-                        # Extract JSON between markdown code blocks
-                        start = content.find("```json") + 7
-                        end = content.find("```", start)
-                        json_content = content[start:end].strip()
-                    else:
-                        json_content = content.strip()
-
-                    parsed_response = json.loads(json_content)
-
-                    # Write debug to file in tmp
-                    if settings.DEBUG:
-                        os.makedirs(settings.DEBUG_DIR, exist_ok=True)
-                        timestamp = int(time.time())
-                        file_path = os.path.join(settings.DEBUG_DIR, f"llm-podcast-{timestamp}.json")
-                        with open(file_path, "w") as f:
-                            json.dump(parsed_response, f, indent=4)
-
-                    return parsed_response.get("dialogue", [])
-                except json.JSONDecodeError:
-                    raise Exception("Invalid LLM response format")
-            else:
-                raise Exception("Invalid LLM response format")
-
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"LLM API request failed: {str(e)}")
-        except Exception as e:
-            raise Exception(f"Error processing LLM response: {str(e)}")
-
-    def refine_podcast_script(self, dialogues: List[Dict[str,str]]) -> List[Dict[str, str]]:
-        """
-        Send dialogues to LLM for refinement.
-
-        Args:
-            dialogues: LLM generated dialogues
-
-        Returns:
-            List of refined dialogue segments
-
-        Raises:
-            Exception: If LLM request fails
-        """
-        if not settings.LLM_PODCAST_REFINER_ENABLED:
-            return dialogues
-
-        logger.debug(f"Using Podcast System Prompt: {settings.LLM_PODCAST_REFINER_SYSTEM_PROMPT}")
-        dialogues_json = json.dumps(dialogues, indent=4)
-
-        # Prepare the payload for the LLM API with system and user messages
-        payload = {
-            "model": settings.LLM_MODEL,  # Use configured model
-            "messages": [
-                {"role": "system", "content": settings.LLM_PODCAST_REFINER_SYSTEM_PROMPT},
-                {"role": "user", "content": dialogues_json}
-            ],
-            "temperature": settings.LLM_TEMPERATURE,
-            "stream": False,
-            "response_format": settings.LLM_PODCAST_RESPONSE_FORMAT  # Use the response format from settings
-        }
+        for i in range(len(topics_text)):
+            num_exchanges = random.randint(settings.TOPIC_EXCHANGE_MIN, settings.TOPIC_EXCHANGE_MAX)
+            exchanges_per_topic.append(num_exchanges)
+            total_exchanges += num_exchanges
+        
+        progress_increment = 40 / total_exchanges
 
         try:
-            # Send request to LLM endpoint
-            response = requests.post(
-                self.endpoint,
-                json=payload,
-                timeout=settings.LLM_TIMEOUT
-            )
+            # Process each topic in the list
+            for i, topic_content in enumerate(topics_text):
+                # Summarize the topic content first
+                summary = self.summarize_podcast_text(topic_content)
+                num_exchanges = exchanges_per_topic[i]
+                
+                # Get first response from HOST_A
+                topic_context = f"""
+                <topic>
+                {summary}
+                </topic>
 
-            response.raise_for_status()
+                <instruction>
+                {settings.INTRO_SEGMENT_INSTRUCTIONS[i == 0]}
+                </instruction>
+                """
+                if current_speaker == "HOST_A":
+                    content, host_b_chat = self._llm_chat(host_a_prompt, topic_context, host_b_chat)
+                else:
+                    content, host_a_chat = self._llm_chat(host_b_prompt, topic_context, host_a_chat)
+                
+                # Add first HOST_A response to dialogue
+                dialogue.append({"speaker": current_speaker, "text": content})
+                current_speaker = "HOST_B" if current_speaker == "HOST_A" else "HOST_A"
+                
+                # Alternate between HOST_A and HOST_B for the remaining exchanges
+                for j in range(num_exchanges):
 
-            # Parse the response
-            result = response.json()
+                    if j > (num_exchanges - 3):
+                        instruction = f"""
+                        You have {num_exchanges - j} seconds left on this topic before you're moving onto the next topic for the podcast.
+                        Be aware of when to start wrapping up the discussion on the current topic in preparation for the next topic.
+                        """
 
-            # Extract the content from the LLM response
-            if "choices" in result and len(result["choices"]) > 0:
-                content = result["choices"][0]["message"]["content"]
+                        if i == (len(topics_text) - 1):
+                            instruction = f"""
+                            You have {num_exchanges - j} seconds left before the podcast has to end.
+                            Be aware of when to start wrapping up the podcast and saying your goodbyes and thank yous.
+                            """
 
-                # Try to parse the JSON from the LLM response
-                try:
-                    # Extract JSON from the response (in case it's wrapped in markdown or other formatting)
-                    if "```json" in content:
-                        # Extract JSON between markdown code blocks
-                        start = content.find("```json") + 7
-                        end = content.find("```", start)
-                        json_content = content[start:end].strip()
+                        content = f"""
+                        {content}
+
+                        <instruction>
+                        {instruction}
+                        </instruction>
+                        """
+
+                    if current_speaker == "HOST_A":
+                        content, host_b_chat = self._llm_chat(host_a_prompt, content, host_b_chat)
                     else:
-                        json_content = content.strip()
+                        content, host_a_chat = self._llm_chat(host_b_prompt, content, host_a_chat)
+                    dialogue.append({"speaker": current_speaker, "text": content})
+                    current_speaker = "HOST_B" if current_speaker == "HOST_A" else "HOST_A"
+                    job["progress"] += progress_increment
+            
+            # Write debug to file in tmp
+            if settings.DEBUG:
+                os.makedirs(settings.DEBUG_DIR, exist_ok=True)
+                timestamp = int(time.time())
+                file_path = os.path.join(settings.DEBUG_DIR, f"llm-podcast-{timestamp}.json")
+                with open(file_path, "w") as f:
+                    json.dump(dialogue, f, indent=4)
 
-                    parsed_response = json.loads(json_content)
-
-                    # Write debug to file in tmp
-                    if settings.DEBUG:
-                        os.makedirs(settings.DEBUG_DIR, exist_ok=True)
-                        timestamp = int(time.time())
-                        file_path = os.path.join(settings.DEBUG_DIR, f"llm-podcast-refined-{timestamp}.json")
-                        with open(file_path, "w") as f:
-                            json.dump(parsed_response, f, indent=4)
-
-                    return parsed_response.get("dialogue", [])
-                except json.JSONDecodeError:
-                    raise Exception("Invalid LLM response format")
-            else:
-                raise Exception("Invalid LLM response format")
-
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"LLM API request failed: {str(e)}")
+            return dialogue
+            
         except Exception as e:
-            raise Exception(f"Error processing LLM response: {str(e)}")
+            raise Exception(f"Error generating podcast script: {str(e)}")

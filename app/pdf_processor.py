@@ -16,6 +16,12 @@ DOCLING_MODELS_PATH = "/root/.cache/docling/models"
 class PDFProcessor:
     def __init__(self):
         pipeline_options = PdfPipelineOptions(artifacts_path=DOCLING_MODELS_PATH)
+        if hasattr(pipeline_options, "do_ocr"):
+            pipeline_options.do_ocr = False
+        if hasattr(pipeline_options, "do_table_structure"):
+            pipeline_options.do_table_structure = True
+        if hasattr(pipeline_options, "accelerator_device"):
+            pipeline_options.accelerator_device = "cpu"
         self.converter = DocumentConverter(
             format_options={
                 InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)

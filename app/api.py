@@ -233,7 +233,7 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
             # Update job status
             logger.info(f"Starting processing for job: {job_id}")
             jobs[job_id]["status"] = "processing"
-            jobs[job_id]["progress"] = 5  # Initial progress
+            jobs[job_id]["progress"] = 0  # Initial progress
 
             total_sources = len(file_contents) + len(arxiv_urls)
             if total_sources == 0:
@@ -267,45 +267,25 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
                 text_contents.append(text_content)
                 jobs[job_id]["progress"] += progress_increment
 
+            # Progress 15% Point
+
             # Step 2: Generate podcast scripts with LLM for all sources
             logger.info(f"Generating podcast scripts for all {total_sources} sources for job: {job_id}")
-            all_dialogues = []
             llm_client = LLMClient()
-            progress_increment = 30 / total_sources
-            for index, text_content in enumerate(text_contents):
-                # Set intro/outro based on position
-                intro = False
-                outro = False
-                if index == 0:  # First source
-                    intro = True
-                elif index == len(text_contents) - 1:  # Last source
-                    outro = True
-
-                logger.debug(f"Generating script for source {index + 1}/{total_sources} for job: {job_id}")
-                podcast_content = llm_client.summarize_podcast_text(text_content)
-                dialogue = llm_client.generate_podcast_script(
-                    podcast_content,
-                    intro,
-                    outro)
-                dialogue = llm_client.refine_podcast_script(dialogue)
-                logger.debug(f"Successfully generated script for source {index + 1}/{total_sources} for job: {job_id}")
-                all_dialogues.append(dialogue)
-                jobs[job_id]["progress"] += progress_increment
+            all_dialogues = llm_client.generate_podcast_script(text_contents, jobs[job_id])
+            jobs[job_id]["progress"] = 55
 
             # Step 3: Generate audio segments with TTS for all sources
             logger.info(f"Generating audio segments for all {total_sources} sources for job: {job_id}")
             tts_client = TTSClient()
-            progress_increment = 30 / total_sources
-            for index, dialogue in enumerate(all_dialogues):
-                logger.debug(f"Generating audio for source {index + 1}/{total_sources} for job: {job_id}")
-                audio_files = tts_client.generate_audio_segments(
-                    dialogue,
-                    index,
-                    tmpdirname
-                )
-                logger.debug(f"Successfully generated audio for source {index + 1}/{total_sources} for job: {job_id}")
-                all_audio_files.extend(audio_files)
-                jobs[job_id]["progress"] += progress_increment
+            audio_files = tts_client.generate_audio_segments(
+                all_dialogues,
+                jobs[job_id],
+                tmpdirname
+            )
+            logger.debug(f"Successfully generated audio for source {index + 1}/{total_sources} for job: {job_id}")
+            all_audio_files.extend(audio_files)
+            jobs[job_id]["progress"] = 95
 
             # Step 4: Stitch all audio segments into final output
             logger.info(f"Stitching all audio segments for job: {job_id}")
@@ -325,4 +305,5 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
         except Exception as e:
             jobs[job_id]["status"] = "failed"
             jobs[job_id]["error"] = str(e)
+            jobs[job_id]["detail"] = str(e)
             logger.error(f"Error processing job {job_id}: {str(e)}", exc_info=True)
