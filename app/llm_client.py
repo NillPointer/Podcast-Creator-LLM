@@ -123,7 +123,7 @@ class LLMClient:
             
             if "choices" in result and len(result["choices"]) > 0:
                 content = result["choices"][0]["message"]["content"].strip()
-                llm_chat[-1]["content"] = _remove_xml(llm_chat[-1]["content"])
+                llm_chat[-1]["content"] = self._remove_xml(llm_chat[-1]["content"])
                 llm_chat.append({"role": "assistant", "content": content})
                 
                 # Write debug to file in tmp
