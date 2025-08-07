@@ -1,6 +1,7 @@
 import requests
 import json
 import random
+import re
 import os
 import time
 from typing import List, Dict, Any
@@ -70,6 +71,10 @@ class LLMClient:
         except Exception as e:
             raise Exception(f"Error processing LLM response: {str(e)}")
     
+    def _remove_xml(text: str) -> str:
+        # Remove XML tags and everything inside them
+        return re.sub(r'<.*?>.*?</.*?>', '', text, flags=re.DOTALL).strip()
+
     def _llm_chat(self, 
     system_prompt: str, 
     user_content: str, 
@@ -118,6 +123,7 @@ class LLMClient:
             
             if "choices" in result and len(result["choices"]) > 0:
                 content = result["choices"][0]["message"]["content"].strip()
+                llm_chat[-1]["content"] = _remove_xml(llm_chat[-1]["content"])
                 llm_chat.append({"role": "assistant", "content": content})
                 
                 # Write debug to file in tmp
