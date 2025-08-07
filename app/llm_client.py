@@ -220,24 +220,24 @@ class LLMClient:
                 # Alternate between HOST_A and HOST_B for the remaining exchanges
                 for j in range(num_exchanges):
 
-                    if j > (num_exchanges - 3):
+                    if j >= (num_exchanges - 2):
                         instruction = f"""
-                        You have {num_exchanges - j} seconds left on this topic before you're moving onto the next topic for the podcast.
-                        Be aware of when to start wrapping up the discussion on the current topic in preparation for the next topic.
+                        Naturally end the conversation about the current topic.
+                        You will be given the next topic to cover for the podcast in the next instruction.
+                        Say something like "alright, it's time to move onto another topic" in a natural way.
                         """
 
                         if i == (len(topics_text) - 1):
                             instruction = f"""
-                            You have {num_exchanges - j} seconds left before the podcast has to end.
-                            Be aware of when to start wrapping up the podcast and saying your goodbyes and thank yous.
+                            The podcast is ending now, say your goodbyes and thank the audience for tuning in.
                             """
 
                         content = f"""
-                        {content}
-
                         <instruction>
                         {instruction}
                         </instruction>
+
+                        {content}
                         """
 
                     if current_speaker == "HOST_A":

@@ -37,8 +37,8 @@ class Settings:
     LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "600"))
 
     # Topic exchange settings for alternating host dialogues
-    TOPIC_EXCHANGE_MIN: int = int(os.getenv("TOPIC_EXCHANGE_MIN", "30"))
-    TOPIC_EXCHANGE_MAX: int = int(os.getenv("TOPIC_EXCHANGE_MAX", "35"))
+    TOPIC_EXCHANGE_MIN: int = int(os.getenv("TOPIC_EXCHANGE_MIN", "33"))
+    TOPIC_EXCHANGE_MAX: int = int(os.getenv("TOPIC_EXCHANGE_MAX", "37"))
 
     LLM_SUMMARY_ENABLED: bool = os.getenv("LLM_SUMMARY_ENABLED", "True").lower() in ['true']
     LLM_SUMMARY_SYSTEM_PROMPT: str = os.getenv(
@@ -82,19 +82,19 @@ Your summaries should:
     )
 
     HOST_A_PERSONALITY: str = """
-    - Tone: Warm, high-energy, optimistic
+    - Tone: Warm, high-energy, realistic and educated
     - Vibe: Curious generalist who connects dots across domains
     - Strengths: Makes complex topics accessible without dumbing them down
     - Humor Style: Playful, observational, enjoys teasing the co-host
     - Behavior:
-        - Reacts enthusiastically to new ideas (“Oh, that's wild!”, “That makes sense actually…”)
-        - Tries to keep things moving and engaging for the audience
+        - Reacts enthusiastically (“Oh, that's wild!”, “That makes sense actually…”)
+        - Tries to keep the podcast on topic and moving and engaging for the audience
         - Naturally segues into personal stories or pop culture references
     - Interaction Style: Plays the “straight man”
     """
 
     HOST_B_PERSONALITY: str = """
-    - Tone: Dry, skeptical, mildly sarcastic
+    - Tone: Dry, skeptical, critical, mildly sarcastic
     - Vibe: Intellectually sharp, challenges assumptions, often plays devil's advocate
     - Strengths: Great at dissecting arguments, spotting logical holes in papers or claims
     - Humor Style: Deadpan, understated jokes, well-timed one-liners
@@ -136,17 +136,32 @@ You will also receive XML tags with instructions or topical information.
 # XML Tags You May See
 
 ## Podcast Topic
-```xml
+```
 <topic>
 A docuemnt, article or summary of the topic to be discussed in the podcast.
 </topic>
 ```
 
 ## Instruction To Follow
-```xml
+```
 <instruction>
 An explicit direction like transitioning to a new topic or wrapping up.
 </instruction>
+```
+
+# Example
+If the input is:
+```
+<instruction>
+Change the tone to be more critical
+</instruction>
+
+I really like what this research is about!
+```
+
+The output should be:
+```
+Hmm, well I'm not so sure this is all a good thing
 ```
 
 ---
