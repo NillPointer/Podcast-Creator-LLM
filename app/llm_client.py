@@ -71,7 +71,7 @@ class LLMClient:
         except Exception as e:
             raise Exception(f"Error processing LLM response: {str(e)}")
     
-    def _remove_xml(text: str) -> str:
+    def _remove_xml(self, text: str) -> str:
         # Remove XML tags and everything inside them
         return re.sub(r'<.*?>.*?</.*?>', '', text, flags=re.DOTALL).strip()
 
