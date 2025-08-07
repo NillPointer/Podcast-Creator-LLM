@@ -91,12 +91,14 @@ class LLMClient:
             Exception: If LLM request fails
         """
 
+        if system_prompt:
+            llm_chat.append({"role": "system", "content": system_prompt})
+
         llm_chat.append({"role": "user", "content": user_content})
 
         payload = {
             "model": settings.LLM_MODEL,
             "messages": [
-                {"role": "system", "content": system_prompt}
             ],
             "temperature": temperature,
             "stream": False
