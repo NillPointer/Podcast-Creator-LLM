@@ -40,7 +40,7 @@ class Settings:
     TOPIC_EXCHANGE_MIN: int = int(os.getenv("TOPIC_EXCHANGE_MIN", "30"))
     TOPIC_EXCHANGE_MAX: int = int(os.getenv("TOPIC_EXCHANGE_MAX", "35"))
 
-    LLM_SUMMARY_ENABLED: bool = os.getenv("LLM_SUMMARY_ENABLED", "False").lower() in ['true']
+    LLM_SUMMARY_ENABLED: bool = os.getenv("LLM_SUMMARY_ENABLED", "True").lower() in ['true']
     LLM_SUMMARY_SYSTEM_PROMPT: str = os.getenv(
         "LLM_SUMMARY_SYSTEM_PROMPT",
         """
