@@ -200,6 +200,10 @@ class LLMClient:
                 
                 # Get first response from HOST_A
                 topic_context = f"""
+                <system>
+                {host_a_prompt if current_speaker == "HOST_A" else host_b_prompt}
+                </system>
+
                 <topic>
                 {summary}
                 </topic>
@@ -209,9 +213,9 @@ class LLMClient:
                 </instruction>
                 """
                 if current_speaker == "HOST_A":
-                    content, host_b_chat = self._llm_chat(host_a_prompt, topic_context, host_b_chat)
+                    content, host_b_chat = self._llm_chat("", topic_context, host_b_chat)
                 else:
-                    content, host_a_chat = self._llm_chat(host_b_prompt, topic_context, host_a_chat)
+                    content, host_a_chat = self._llm_chat("", topic_context, host_a_chat)
                 
                 # Add first HOST_A response to dialogue
                 dialogue.append({"speaker": current_speaker, "text": content})
@@ -219,6 +223,14 @@ class LLMClient:
                 
                 # Alternate between HOST_A and HOST_B for the remaining exchanges
                 for j in range(num_exchanges):
+
+                    chat_content = f"""
+                    <system>
+                    {host_a_prompt if current_speaker == "HOST_A" else host_b_prompt}
+                    </system>
+
+                    {content}
+                    """
 
                     if j >= (num_exchanges - 2):
                         instruction = f"""
@@ -232,7 +244,11 @@ class LLMClient:
                             The podcast is ending now, say your goodbyes and thank the audience for tuning in.
                             """
 
-                        content = f"""
+                        chat_content = f"""
+                        <system>
+                        {host_a_prompt if current_speaker == "HOST_A" else host_b_prompt}
+                        </system>
+
                         <instruction>
                         {instruction}
                         </instruction>
@@ -241,9 +257,9 @@ class LLMClient:
                         """
 
                     if current_speaker == "HOST_A":
-                        content, host_b_chat = self._llm_chat(host_a_prompt, content, host_b_chat)
+                        content, host_b_chat = self._llm_chat("", chat_content, host_b_chat)
                     else:
-                        content, host_a_chat = self._llm_chat(host_b_prompt, content, host_a_chat)
+                        content, host_a_chat = self._llm_chat("", chat_content, host_a_chat)
                     dialogue.append({"speaker": current_speaker, "text": content})
                     current_speaker = "HOST_B" if current_speaker == "HOST_A" else "HOST_A"
                     job["progress"] += progress_increment
