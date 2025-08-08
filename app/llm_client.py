@@ -101,7 +101,7 @@ class LLMClient:
         payload = {
             "model": settings.LLM_MODEL,
             "messages": [
-                {"role": "system", "content": system_prompt}
+                {"role": "system", "content": system_prompt},
             ],
             "temperature": temperature,
             "stream": False
@@ -109,7 +109,7 @@ class LLMClient:
 
         payload["messages"].extend(llm_chat)
 
-        logger.info(payload)
+        logger.debug(payload)
 
         try:
             response = requests.post(
@@ -253,7 +253,7 @@ class LLMClient:
                         """
 
                     if current_speaker == "HOST_A":
-                        content, host_b_chat = self._llm_chat(host_a_chat, chat_content, host_b_chat)
+                        content, host_b_chat = self._llm_chat(host_a_prompt, chat_content, host_b_chat)
                     else:
                         content, host_a_chat = self._llm_chat(host_b_prompt, chat_content, host_a_chat)
                     dialogue.append({"speaker": current_speaker, "text": content})
