@@ -62,7 +62,8 @@ class TTSClient:
                 "response_format": "wav",
                 "temperature": temperature,
                 "exaggeration": exaggeration,
-                "cfg_weight": cfg_weight
+                "cfg_weight": cfg_weight,
+                "split_text": False
             }
 
             try:
