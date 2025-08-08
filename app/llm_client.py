@@ -197,7 +197,7 @@ class LLMClient:
             total_exchanges += num_exchanges
         
         progress_increment = 40 / total_exchanges
-        chat_to_keep = 1
+        chat_to_keep = 4
 
         try:
             # Process each topic in the list
@@ -245,11 +245,11 @@ class LLMClient:
                         {content}
                         """
 
-                    if j >= (num_exchanges - 2):
+                    if j >= (num_exchanges - 1):
                         instruction = f"""
                         Naturally end this conversation about the current topic.
                         You will be given the next topic to cover for the podcast in the next instruction.
-                        Do not make us the next topic to cover yourself.
+                        Do not make up the next topic, just be ambiguous.
                         Say something like "alright, it's time to move onto another topic" in a natural way.
                         """
 
