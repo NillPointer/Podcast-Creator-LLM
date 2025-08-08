@@ -196,8 +196,8 @@ async def list_podcasts():
         for filename in os.listdir(settings.AUDIO_STORAGE_PATH):
             file_path = os.path.join(settings.AUDIO_STORAGE_PATH, filename)
 
-            # Skip non-files and non-mp3 files
-            if not os.path.isfile(file_path) or not filename.lower().endswith('.mp3'):
+            # Skip non-files and non-audio files
+            if not os.path.isfile(file_path) or not filename.lower().endswith(('.mp3', '.wav')):
                 continue
 
             # Get file stats
