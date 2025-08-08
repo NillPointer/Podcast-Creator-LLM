@@ -96,14 +96,12 @@ class LLMClient:
             Exception: If LLM request fails
         """
 
-        if system_prompt:
-            llm_chat.append({"role": "system", "content": system_prompt})
-
         llm_chat.append({"role": "user", "content": user_content})
 
         payload = {
             "model": settings.LLM_MODEL,
             "messages": [
+                {"role": "system", "content": system_prompt}
             ],
             "temperature": temperature,
             "stream": False
@@ -233,8 +231,9 @@ class LLMClient:
 
                     if j >= (num_exchanges - 2):
                         instruction = f"""
-                        Naturally end the conversation about the current topic.
+                        Naturally end this conversation about the current topic.
                         You will be given the next topic to cover for the podcast in the next instruction.
+                        Do not make us the next topic to cover yourself.
                         Say something like "alright, it's time to move onto another topic" in a natural way.
                         """
 
