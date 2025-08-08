@@ -10,13 +10,13 @@ class Settings:
     # Podcast Settings
     PODCAST_NAME: str = os.getenv("PODCAST_NAME", "Tech Show")
     HOST_A_VOICE: str = os.getenv("HOST_A_VOICE", "podcaster_m_1.wav")
-    HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "podcaster_m_2.wav")
+    HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "podcaster_f_1.wav")
     HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Linus")
-    HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Kevin")
-    HOST_A_TEMPERATURE: float = float(os.getenv("HOST_A_TEMPERATURE", "0.6"))
-    HOST_B_TEMPERATURE: float = float(os.getenv("HOST_B_TEMPERATURE", "0.6"))
-    HOST_A_EXAGGERATION: float = float(os.getenv("HOST_A_EXAGGERATION", "0.8"))
-    HOST_B_EXAGGERATION: float = float(os.getenv("HOST_B_EXAGGERATION", "0.8"))
+    HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Luna")
+    HOST_A_TEMPERATURE: float = float(os.getenv("HOST_A_TEMPERATURE", "0.7"))
+    HOST_B_TEMPERATURE: float = float(os.getenv("HOST_B_TEMPERATURE", "0.7"))
+    HOST_A_EXAGGERATION: float = float(os.getenv("HOST_A_EXAGGERATION", "0.7"))
+    HOST_B_EXAGGERATION: float = float(os.getenv("HOST_B_EXAGGERATION", "0.7"))
     HOST_A_CFG: float = float(os.getenv("HOST_A_CFG", "0.45"))
     HOST_B_CFG: float = float(os.getenv("HOST_B_CFG", "0.45"))
     INTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
@@ -85,7 +85,7 @@ Your summaries should:
 
     HOST_A_PERSONALITY: str = """
     - Likes technology but is realistic about it and not overly trusting of claims
-    - Tone: Warm, high-energy, realistic and educated
+    - Tone: Calm, realistic and educated
     - Vibe: Curious generalist who connects dots across domains
     - Strengths: Makes complex topics accessible without dumbing them down
     - Humor Style: Playful, observational, enjoys teasing the co-host
@@ -98,10 +98,10 @@ Your summaries should:
 
     HOST_B_PERSONALITY: str = """
     - Likes technology but tries to poke holes and find flaws in claims to further discussion
-    - Tone: Dry, skeptical, critical, mildly sarcastic
+    - Tone: Warm, skeptical, critical
     - Vibe: Intellectually sharp, challenges assumptions, often plays devil's advocate
     - Strengths: Great at dissecting arguments, spotting logical holes in papers or claims
-    - Humor Style: Deadpan, understated jokes, well-timed one-liners
+    - Humor Style: Turning questions into humour
     - Behavior:
         - Interrupts with “But here's the thing…”, "You're not seeing the bigger picture..."
         - Tends to push back on hype or overconfidence, but is not a pessimist
