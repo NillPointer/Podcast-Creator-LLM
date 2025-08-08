@@ -109,6 +109,8 @@ class LLMClient:
 
         payload["messages"].extend(llm_chat)
 
+        logger.info(payload)
+
         try:
             response = requests.post(
                 self.endpoint,
