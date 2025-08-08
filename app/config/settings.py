@@ -21,8 +21,7 @@ class Settings:
     HOST_B_CFG: float = float(os.getenv("HOST_B_CFG", "0.45"))
     INTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
         True: """Welcome the listeners to the podcast.
-        Both hosts should introduce themselves.
-        Give a high level over of the topic then begin discussing it in-depth""",
+        Introduce yourself, then stop and offer the co-host to introduce themselves""",
         False: """Smoothly transition to the new podcast topic from the previous topic in a natural way.
         Give a high level over of the topic then begin discussing it in-depth"""
     }

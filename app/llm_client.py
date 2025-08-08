@@ -236,6 +236,15 @@ class LLMClient:
                     {content}
                     """
 
+                    if i == 0 and j == 0:
+                        chat_content = f"""
+                        <instruction>
+                        Introduce yourself to the listeners
+                        </instruction>
+
+                        {content}
+                        """
+
                     if j >= (num_exchanges - 2):
                         instruction = f"""
                         Naturally end this conversation about the current topic.
