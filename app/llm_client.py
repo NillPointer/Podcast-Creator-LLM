@@ -123,7 +123,6 @@ class LLMClient:
             
             if "choices" in result and len(result["choices"]) > 0:
                 content = result["choices"][0]["message"]["content"].strip()
-                llm_chat[-1]["content"] = self._remove_xml(llm_chat[-1]["content"])
                 llm_chat.append({"role": "assistant", "content": content})
                 
                 # Write debug to file in tmp
@@ -208,10 +207,6 @@ class LLMClient:
                 
                 # Get first response from HOST_A
                 topic_context = f"""
-                <system>
-                {host_a_prompt if current_speaker == "HOST_A" else host_b_prompt}
-                </system>
-
                 <topic>
                 {summary}
                 </topic>
@@ -221,9 +216,9 @@ class LLMClient:
                 </instruction>
                 """
                 if current_speaker == "HOST_A":
-                    content, host_b_chat = self._llm_chat("", topic_context, host_b_chat)
+                    content, host_b_chat = self._llm_chat(host_a_prompt, topic_context, host_b_chat)
                 else:
-                    content, host_a_chat = self._llm_chat("", topic_context, host_a_chat)
+                    content, host_a_chat = self._llm_chat(host_b_prompt, topic_context, host_a_chat)
                 
                 # Add first HOST_A response to dialogue
                 dialogue.append({"speaker": current_speaker, "text": content})
@@ -233,14 +228,6 @@ class LLMClient:
                 for j in range(num_exchanges):
 
                     chat_content = f"""
-                    <system>
-                    {host_a_prompt if current_speaker == "HOST_A" else host_b_prompt}
-                    </system>
-
-                    <topic>
-                    {summary}
-                    </topic>
-
                     {content}
                     """
 
@@ -257,10 +244,6 @@ class LLMClient:
                             """
 
                         chat_content = f"""
-                        <system>
-                        {host_a_prompt if current_speaker == "HOST_A" else host_b_prompt}
-                        </system>
-
                         <instruction>
                         {instruction}
                         </instruction>
@@ -269,9 +252,9 @@ class LLMClient:
                         """
 
                     if current_speaker == "HOST_A":
-                        content, host_b_chat = self._llm_chat("", chat_content, host_b_chat)
+                        content, host_b_chat = self._llm_chat(host_a_chat, chat_content, host_b_chat)
                     else:
-                        content, host_a_chat = self._llm_chat("", chat_content, host_a_chat)
+                        content, host_a_chat = self._llm_chat(host_b_prompt, chat_content, host_a_chat)
                     dialogue.append({"speaker": current_speaker, "text": content})
                     current_speaker = "HOST_B" if current_speaker == "HOST_A" else "HOST_A"
                     job["progress"] += progress_increment
