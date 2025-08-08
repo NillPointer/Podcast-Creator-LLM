@@ -197,6 +197,7 @@ class LLMClient:
             total_exchanges += num_exchanges
         
         progress_increment = 40 / total_exchanges
+        chat_to_keep = 1
 
         try:
             # Process each topic in the list
@@ -204,6 +205,10 @@ class LLMClient:
                 # Summarize the topic content first
                 summary = self.summarize_podcast_text(topic_content)
                 num_exchanges = exchanges_per_topic[i]
+
+                if i > 0:
+                    host_a_chat = host_a_chat[-chat_to_keep:]
+                    host_b_chat = host_b_chat[-chat_to_keep:]
                 
                 # Get first response from HOST_A
                 topic_context = f"""
