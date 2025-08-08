@@ -290,7 +290,7 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
             # Step 4: Stitch all audio segments into final output
             logger.info(f"Stitching all audio segments for job: {job_id}")
             stitcher = AudioStitcher()
-            output_filename = f"podcast_{datetime.utcnow().strftime('%Y%m%d%H%M')}.mp3"
+            output_filename = f"podcast_{datetime.utcnow().strftime('%Y%m%d%H%M')}.wav"
             output_file = stitcher.stitch_audio_segments(
                 all_audio_files, output_filename
             )

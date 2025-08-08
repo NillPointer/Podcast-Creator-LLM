@@ -58,8 +58,8 @@ class TTSClient:
                 "voice_mode": "predefined",
                 "predefined_voice_id": voice,
                 "voice": voice,
-                "output_format": "mp3",
-                "response_format": "mp3",
+                "output_format": "wav",
+                "response_format": "wav",
                 "temperature": temperature,
                 "exaggeration": exaggeration,
                 "cfg_weight": cfg_weight
@@ -76,7 +76,7 @@ class TTSClient:
                 response.raise_for_status()
 
                 # Save the audio file
-                filename = f"segment_{i+1:03d}.mp3"
+                filename = f"segment_{i+1:03d}.wav"
                 filepath = os.path.join(temp_dir, filename)
 
                 # Save the audio data

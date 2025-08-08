@@ -39,13 +39,13 @@ class AudioStitcher:
             for audio_file in audio_files:
                 if os.path.exists(audio_file):
                     # Load the audio file
-                    audio_segment = AudioSegment.from_mp3(audio_file)
+                    audio_segment = AudioSegment.from_file(file=audio_file, format="wav")
                     combined += audio_segment
                 else:
                     raise FileNotFoundError(f"Audio file not found: {audio_file}")
             
             # Export the combined audio
-            combined.export(output_path, format="mp3")
+            combined.export(output_path, format="wav")
             logger.info(f"Successfully stitched audio into {output_path}")
             
             return output_path

@@ -9,16 +9,16 @@ class Settings:
 
     # Podcast Settings
     PODCAST_NAME: str = os.getenv("PODCAST_NAME", "Tech Show")
-    HOST_A_VOICE: str = os.getenv("HOST_A_VOICE", "Linus.mp3")
-    HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "ThomasPodcast.mp3")
+    HOST_A_VOICE: str = os.getenv("HOST_A_VOICE", "podcaster_m_1.wav")
+    HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "podcaster_m_2.wav")
     HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Linus")
     HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Kevin")
     HOST_A_TEMPERATURE: float = float(os.getenv("HOST_A_TEMPERATURE", "0.6"))
     HOST_B_TEMPERATURE: float = float(os.getenv("HOST_B_TEMPERATURE", "0.6"))
     HOST_A_EXAGGERATION: float = float(os.getenv("HOST_A_EXAGGERATION", "0.8"))
     HOST_B_EXAGGERATION: float = float(os.getenv("HOST_B_EXAGGERATION", "0.8"))
-    HOST_A_CFG: float = float(os.getenv("HOST_A_CFG", "0.6"))
-    HOST_B_CFG: float = float(os.getenv("HOST_B_CFG", "0.6"))
+    HOST_A_CFG: float = float(os.getenv("HOST_A_CFG", "0.45"))
+    HOST_B_CFG: float = float(os.getenv("HOST_B_CFG", "0.45"))
     INTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
         True: """Welcome the listeners to the podcast.
         Both hosts should introduce themselves.
