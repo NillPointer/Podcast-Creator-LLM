@@ -237,6 +237,10 @@ class LLMClient:
                     {host_a_prompt if current_speaker == "HOST_A" else host_b_prompt}
                     </system>
 
+                    <topic>
+                    {summary}
+                    </topic>
+
                     {content}
                     """
 
