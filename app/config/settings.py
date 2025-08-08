@@ -15,10 +15,10 @@ class Settings:
     HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Luna")
     HOST_A_TEMPERATURE: float = float(os.getenv("HOST_A_TEMPERATURE", "0.7"))
     HOST_B_TEMPERATURE: float = float(os.getenv("HOST_B_TEMPERATURE", "0.7"))
-    HOST_A_EXAGGERATION: float = float(os.getenv("HOST_A_EXAGGERATION", "0.7"))
-    HOST_B_EXAGGERATION: float = float(os.getenv("HOST_B_EXAGGERATION", "0.7"))
-    HOST_A_CFG: float = float(os.getenv("HOST_A_CFG", "0.45"))
-    HOST_B_CFG: float = float(os.getenv("HOST_B_CFG", "0.45"))
+    HOST_A_EXAGGERATION: float = float(os.getenv("HOST_A_EXAGGERATION", "0.65"))
+    HOST_B_EXAGGERATION: float = float(os.getenv("HOST_B_EXAGGERATION", "0.65"))
+    HOST_A_CFG: float = float(os.getenv("HOST_A_CFG", "0.3"))
+    HOST_B_CFG: float = float(os.getenv("HOST_B_CFG", "0.3"))
     INTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
         True: """Welcome the listeners to the podcast.
         Introduce yourself, then stop and offer the co-host to introduce themselves""",
