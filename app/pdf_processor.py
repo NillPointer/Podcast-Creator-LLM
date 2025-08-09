@@ -8,6 +8,7 @@ from typing import Optional, List
 from io import BytesIO
 from app.config.settings import settings
 from app.logger import setup_logger
+from app.progress import increment_progress
 
 logger = setup_logger('pdf_processor')
 
@@ -28,7 +29,7 @@ class PDFProcessor:
             }
         )
 
-    def extract_text_from_pdf(self, pdf_file: BytesIO) -> str:
+    def extract_text_from_pdf(self, pdf_file: BytesIO, *, job_id: Optional[str] = None, progress_increment: float = 0.0) -> str:
         """
         Extract text content from a PDF file using docling.
 
@@ -62,12 +63,14 @@ class PDFProcessor:
                     f.write(markdown_text)
 
             logger.info(f"Successfully extracted text from PDF ({len(markdown_text)} characters)")
+            if job_id and progress_increment:
+                increment_progress(job_id, progress_increment)
             return markdown_text
         except Exception as e:
             logger.error(f"Failed to extract text from PDF: {str(e)}")
             raise Exception(f"Failed to extract text from PDF: {str(e)}")
 
-    def extract_text_from_arxiv(self, arxiv_url: str) -> str:
+    def extract_text_from_arxiv(self, arxiv_url: str, *, job_id: Optional[str] = None, progress_increment: float = 0.0) -> str:
         """
         Extract text content from an Arxiv URL using docling.
 
@@ -100,6 +103,8 @@ class PDFProcessor:
                     f.write(markdown_text)
 
             logger.info(f"Successfully extracted text from Arxiv URL ({len(markdown_text)} characters)")
+            if job_id and progress_increment:
+                increment_progress(job_id, progress_increment)
             return markdown_text
         except Exception as e:
             logger.error(f"Failed to extract text from Arxiv URL: {str(e)}")

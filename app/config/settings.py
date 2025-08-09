@@ -11,8 +11,8 @@ class Settings:
     PODCAST_NAME: str = os.getenv("PODCAST_NAME", "Tech Show")
     HOST_A_VOICE: str = os.getenv("HOST_A_VOICE", "podcaster_m_1.wav")
     HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "podcaster_f_1.wav")
-    HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Linus")
-    HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Luna")
+    HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Kevin")
+    HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Kate")
     HOST_A_TEMPERATURE: float = float(os.getenv("HOST_A_TEMPERATURE", "0.7"))
     HOST_B_TEMPERATURE: float = float(os.getenv("HOST_B_TEMPERATURE", "0.7"))
     HOST_A_EXAGGERATION: float = float(os.getenv("HOST_A_EXAGGERATION", "0.65"))
@@ -34,9 +34,11 @@ class Settings:
 
     # LLM Settings
     LLM_API_HOST: str = os.getenv("LLM_API_HOST", "http://192.168.1.16:8000")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "Gemma-3-27b-it-UD-Q6_K_XL")
-    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "1.0"))
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "Mistral-Small-3.2-24B-FP8")
+    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.6"))
     LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "600"))
+    # LangGraph recursion limit for long-running conversations
+    LLM_GRAPH_RECURSION_LIMIT: int = int(os.getenv("LLM_GRAPH_RECURSION_LIMIT", "1000"))
 
     # Topic exchange settings for alternating host dialogues
     TOPIC_EXCHANGE_MIN: int = int(os.getenv("TOPIC_EXCHANGE_MIN", "33"))

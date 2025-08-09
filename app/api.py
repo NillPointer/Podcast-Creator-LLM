@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 import uuid
 import os
 import tempfile
-from typing import Dict, List, Optional
+from typing import List, Optional
 from io import BytesIO
 import threading
 from datetime import datetime
@@ -13,14 +13,12 @@ from app.tts_client import TTSClient
 from app.audio_stitcher import AudioStitcher
 from app.config.settings import settings
 from app.logger import setup_logger
+from app.progress import jobs, increment_progress
 
 router = APIRouter()
 
 # Setup logging
 logger = setup_logger('podcast_creator_api')
-
-# In-memory storage for job tracking (in production, use a database)
-jobs = {}
 
 @router.post("/podcasts")
 async def create_podcast(
@@ -81,8 +79,8 @@ async def create_podcast(
     jobs[job_id] = {
         "status": "processing",
         "progress": 0,
-        "created_at": datetime.utcnow().isoformat(),
-        "updated_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.now(datetime.UTC).isoformat(),
+        "updated_at": datetime.now(datetime.UTC).isoformat(),
         "result_file": None
     }
 
@@ -254,43 +252,43 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
             for index, file_content in enumerate(file_contents):
                 file_stream = BytesIO(file_content)
                 logger.debug(f"Extracting text from PDF {index + 1}/{total_sources} for job: {job_id}")
-                text_content = pdf_processor.extract_text_from_pdf(file_stream)
+                text_content = pdf_processor.extract_text_from_pdf(
+                    file_stream, job_id=job_id, progress_increment=progress_increment
+                )
                 logger.debug(f"Successfully extracted text from PDF {index + 1}/{total_sources} for job: {job_id}")
                 text_contents.append(text_content)
-                jobs[job_id]["progress"] += progress_increment
 
             # Process Arxiv URLs
             for index, url in enumerate(arxiv_urls):
                 logger.debug(f"Extracting text from Arxiv URL {index + 1}/{total_sources} for job: {job_id}")
-                text_content = pdf_processor.extract_text_from_arxiv(url)
+                text_content = pdf_processor.extract_text_from_arxiv(
+                    url, job_id=job_id, progress_increment=progress_increment
+                )
                 logger.debug(f"Successfully extracted text from Arxiv URL {index + 1}/{total_sources} for job: {job_id}")
                 text_contents.append(text_content)
-                jobs[job_id]["progress"] += progress_increment
 
             # Progress 15% Point
 
             # Step 2: Generate podcast scripts with LLM for all sources
             logger.info(f"Generating podcast scripts for all {total_sources} sources for job: {job_id}")
             llm_client = LLMClient()
-            all_dialogues = llm_client.generate_podcast_script(text_contents, jobs[job_id])
-            jobs[job_id]["progress"] = 55
+            all_dialogues = llm_client.generate_podcast_script(text_contents, job_id)
 
             # Step 3: Generate audio segments with TTS for all sources
             logger.info(f"Generating audio segments for all {total_sources} sources for job: {job_id}")
             tts_client = TTSClient()
             audio_files = tts_client.generate_audio_segments(
                 all_dialogues,
-                jobs[job_id],
-                tmpdirname
+                job_id,
+                tmpdirname,
             )
             logger.debug(f"Successfully generated audio for source {index + 1}/{total_sources} for job: {job_id}")
             all_audio_files.extend(audio_files)
-            jobs[job_id]["progress"] = 95
 
             # Step 4: Stitch all audio segments into final output
             logger.info(f"Stitching all audio segments for job: {job_id}")
             stitcher = AudioStitcher()
-            output_filename = f"podcast_{datetime.utcnow().strftime('%Y%m%d%H%M')}.wav"
+            output_filename = f"podcast_{datetime.now(datetime.UTC).strftime('%Y%m%d%H%M')}.wav"
             output_file = stitcher.stitch_audio_segments(
                 all_audio_files, output_filename
             )
@@ -299,7 +297,9 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
             # Update job status
             jobs[job_id]["result_file"] = output_filename
             jobs[job_id]["status"] = "completed"
-            jobs[job_id]["progress"] = 100
+            remaining = 100 - jobs[job_id].get("progress", 0)
+            if remaining > 0:
+                increment_progress(job_id, remaining)
             logger.info(f"Job completed successfully: {job_id}")
 
         except Exception as e:
@@ -307,3 +307,5 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
             jobs[job_id]["error"] = str(e)
             jobs[job_id]["detail"] = str(e)
             logger.error(f"Error processing job {job_id}: {str(e)}", exc_info=True)
+
+ 

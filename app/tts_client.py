@@ -1,8 +1,9 @@
 import requests
 import os
-from typing import List, Dict
+from typing import List
 from app.config.settings import settings
 from app.logger import setup_logger
+from app.progress import increment_progress
 
 logger = setup_logger('tts_client')
 
@@ -18,9 +19,7 @@ class TTSClient:
             except Exception:
                 pass
 
-    def generate_audio_segments(self, dialogue: List[Dict[str, str]],
-                              job: Dict,
-                              temp_dir: str) -> List[str]:
+    def generate_audio_segments(self, dialogue: List[dict], job_id: str, temp_dir: str) -> List[str]:
         """
         Generate audio segments for each dialogue line using TTS.
 
@@ -37,7 +36,7 @@ class TTSClient:
         """
 
         audio_files = []
-        progress_increment = 40 / len(dialogue)
+        progress_increment = 40 / len(dialogue) if dialogue else 0
 
         for i, segment in enumerate(dialogue):
             speaker = segment["speaker"]
@@ -92,7 +91,8 @@ class TTSClient:
                         f.write(response.content)
 
                 audio_files.append(filepath)
-                job["progress"] += progress_increment
+                if job_id and progress_increment:
+                    increment_progress(job_id, progress_increment)
 
             except requests.exceptions.RequestException as e:
                 raise Exception(f"TTS API request failed for segment {i}: {str(e)}")

@@ -6,6 +6,9 @@ requests==2.32.3
 pydub==0.25.1
 python-dotenv==1.0.1
 docling==2.43.0
+langgraph==0.6.4
+langchain-core==0.3.74
+langchain-openai==0.3.29
 
 # ffmpeg is required for pydub to process audio files
 # It should be installed in the container environment
