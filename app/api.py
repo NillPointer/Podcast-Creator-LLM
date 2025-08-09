@@ -6,7 +6,7 @@ import tempfile
 from typing import List, Optional
 from io import BytesIO
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from app.pdf_processor import PDFProcessor
 from app.llm_client import LLMClient
 from app.tts_client import TTSClient
