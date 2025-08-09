@@ -13,16 +13,7 @@ from app.progress import increment_progress
 
 _llm = create_llm()
 
-
-def start_topic(state: PodcastState) -> PodcastState:
-    from app.graphs.llm_utils import summarize_topic  # local import avoids circulars at module import
-    topics = state["topics"]
-    i = state.get("topic_index", 0)
-    summary = summarize_topic(topics[i], _llm)
-    return {"summary": summary, "exchange_index": 0}
-
-
-# --- Internal helpers (no logic changes) ---------------------------------------------------------
+# --- Internal helpers ---------------------------------------------------------
 
 def _select_route_for_speaker(state: PodcastState) -> Tuple[Speaker, str, list, str]:
     """Return (current_speaker, system_prompt, history, history_key)."""
@@ -79,6 +70,14 @@ def _apply_llm_turn(
 
 # --- Nodes ---------------------------------------------------------------------------------------
 
+def start_topic(state: PodcastState) -> PodcastState:
+    from app.graphs.llm_utils import summarize_topic  # local import avoids circulars at module import
+    topics = state["topics"]
+    i = state.get("topic_index", 0)
+    summary = summarize_topic(topics[i], _llm)
+    return {"summary": summary, "exchange_index": 0}
+
+
 def first_response(state: PodcastState) -> PodcastState:
     i = state["topic_index"]
     is_first_topic = i == 0
@@ -111,15 +110,15 @@ def next_exchange(state: PodcastState) -> PodcastState:
     # Last exchange of this topic: add closing instruction
     if j >= (num_exchanges - 2):
         if i == (len(state["topics"]) - 1):
-            instruction = (
+            instruction = """
                 "The podcast is ending now, say your goodbyes and thank the audience for tuning in."
-            )
+            """.strip()
         else:
-            instruction = (
-                "Naturally end this conversation about the current topic. You will be given the next topic to "
-                "cover in the next instruction. Do not make up the next topic; be ambiguous. Say something like "
-                '"alright, it\'s time to move onto another topic" in a natural way.'
-            )
+            instruction = """
+            Naturally end this conversation about the current topic. You will be given the next topic to
+            cover in the next instruction. Do not make up the next topic; be ambiguous. Say something like
+            "alright, it's time to move onto another topic" in a natural way.
+            """.strip()
 
     chat_content = compose_prompt_with_optional_instruction(content_seed, instruction)
 
