@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.logger import setup_logger
 
@@ -18,7 +18,7 @@ def increment_progress(job_id: str, increment: float) -> None:
         logger.warning(f"Job not found: {job_id}")
         return
     jobs[job_id]["progress"] = jobs[job_id].get("progress", 0) + float(increment)
-    jobs[job_id]["updated_at"] = datetime.now(datetime.UTC).isoformat()
+    jobs[job_id]["updated_at"] = datetime.now(timezone.utc).isoformat()
     logger.info(
         f"Progress incremented for job {job_id}: {jobs[job_id]['progress']}"
     )
