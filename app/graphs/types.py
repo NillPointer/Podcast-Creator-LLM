@@ -20,6 +20,7 @@ class PodcastState(TypedDict, total=False):
 
     # Per-topic context
     summary: str
+    next_topic: str
 
     # Output dialogue
     dialogue: List[Dict[str, str]]

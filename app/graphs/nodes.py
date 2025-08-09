@@ -71,11 +71,15 @@ def _apply_llm_turn(
 # --- Nodes ---------------------------------------------------------------------------------------
 
 def start_topic(state: PodcastState) -> PodcastState:
-    from app.graphs.llm_utils import summarize_topic  # local import avoids circulars at module import
+    from app.graphs.llm_utils import next_topic_summary, summarize_topic
     topics = state["topics"]
     i = state.get("topic_index", 0)
     summary = summarize_topic(topics[i], _llm)
-    return {"summary": summary, "exchange_index": 0}
+    new_state: PodcastState = {"summary": summary, "exchange_index": 0}
+    if i+1 < len(topics):
+        next_topic = next_topic_summary(topics[i+1], _llm)
+        new_state["next_topic"] = next_topic
+    return new_state
 
 
 def first_response(state: PodcastState) -> PodcastState:
@@ -97,6 +101,7 @@ def first_response(state: PodcastState) -> PodcastState:
 def next_exchange(state: PodcastState) -> PodcastState:
     i = state["topic_index"]
     j = state.get("exchange_index", 0)
+    next_topic = state.get("next_topic", "")
     num_exchanges = state["exchanges_per_topic"][i]
 
     # Build content for this turn
@@ -114,10 +119,12 @@ def next_exchange(state: PodcastState) -> PodcastState:
                 "The podcast is ending now, say your goodbyes and thank the audience for tuning in."
             """.strip()
         else:
-            instruction = """
+            instruction = f"""
             Naturally end this conversation about the current topic. You will be given the next topic to
             cover in the next instruction. Do not make up the next topic; be ambiguous. Say something like
             "alright, it's time to move onto another topic" in a natural way.
+
+            Next topic summary: {next_topic}
             """.strip()
 
     chat_content = compose_prompt_with_optional_instruction(content_seed, instruction)

@@ -46,4 +46,9 @@ def summarize_topic(text: str, llm: ChatOpenAI) -> str:
     system_prompt = settings.LLM_SUMMARY_SYSTEM_PROMPT
     return invoke_llm(system_prompt, [], text, llm)
 
-
+def next_topic_summary(text: str, llm: ChatOpenAI) -> str:
+    system_prompt = """
+    Summarize this into a single sentence, make as concise and short as possible
+    """.strip()
+    return invoke_llm(system_prompt, [], text, llm)
+    
