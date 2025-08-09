@@ -79,8 +79,8 @@ async def create_podcast(
     jobs[job_id] = {
         "status": "processing",
         "progress": 0,
-        "created_at": datetime.now(timezone.UTC).isoformat(),
-        "updated_at": datetime.now(timezone.UTC).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
         "result_file": None
     }
 
@@ -288,7 +288,7 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
             # Step 4: Stitch all audio segments into final output
             logger.info(f"Stitching all audio segments for job: {job_id}")
             stitcher = AudioStitcher()
-            output_filename = f"podcast_{datetime.now(timezone.UTC).strftime('%Y%m%d%H%M')}.wav"
+            output_filename = f"podcast_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M')}.wav"
             output_file = stitcher.stitch_audio_segments(
                 all_audio_files, output_filename
             )
