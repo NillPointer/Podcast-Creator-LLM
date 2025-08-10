@@ -11,6 +11,10 @@ from app.graphs.xml_utils import compose_prompt_with_topic_instruction
 from app.graphs.llm_utils import create_llm, invoke_llm
 from app.progress import increment_progress
 
+from app.logger import setup_logger
+
+logger = setup_logger("graph_nodes")
+
 
 _llm = create_llm()
 
@@ -104,6 +108,8 @@ def chat_exchange(state: PodcastState) -> PodcastState:
         instruction = "The podcast is ending now, say your goodbyes and thank the audience for tuning in."
 
     chat_content = compose_prompt_with_topic_instruction(content_seed, topic, instruction)
+
+    logger.info(f"Chat Content: {chat_content}")
 
     # Exchanges should count towards progress, and advance the exchange index by 1
     return _apply_llm_turn(
