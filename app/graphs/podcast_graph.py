@@ -9,9 +9,8 @@ from app.config.settings import settings
 from app.graphs.types import PodcastState
 from app.graphs.llm_utils import build_host_system_prompt
 from app.graphs.nodes import (
-    start_topic,
-    first_response,
-    next_exchange,
+    prepare_topic,
+    chat_exchange,
     finish_topic,
     should_continue_exchange,
     has_more_topics,
@@ -25,27 +24,18 @@ def build_podcast_graph() -> StateGraph:
     graph = StateGraph(PodcastState)
 
     # Register nodes
-    graph.add_node("start_topic", start_topic)
-    graph.add_node("first_response", first_response)
-    graph.add_node("next_exchange", next_exchange)
+    graph.add_node("prepare_topic", prepare_topic)
+    graph.add_node("chat_exchange", chat_exchange)
     graph.add_node("finish_topic", finish_topic)
 
     # Edges
-    graph.set_entry_point("start_topic")
-    graph.add_edge("start_topic", "first_response")
+    graph.set_entry_point("prepare_topic")
+    graph.add_edge("prepare_topic", "chat_exchange")
     graph.add_conditional_edges(
-        "first_response",
+        "chat_exchange",
         should_continue_exchange,
         {
-            "next_exchange": "next_exchange",
-            "finish_topic": "finish_topic",
-        },
-    )
-    graph.add_conditional_edges(
-        "next_exchange",
-        should_continue_exchange,
-        {
-            "next_exchange": "next_exchange",
+            "chat_exchange": "chat_exchange",
             "finish_topic": "finish_topic",
         },
     )
@@ -53,7 +43,7 @@ def build_podcast_graph() -> StateGraph:
         "finish_topic",
         has_more_topics,
         {
-            "start_topic": "start_topic",
+            "prepare_topic": "prepare_topic",
             "end": END,
         },
     )
@@ -91,7 +81,7 @@ def compile_podcast_graph(topics: List[str], job_id: str) -> tuple:
         "current_speaker": "HOST_A",
         "host_a_history": [],
         "host_b_history": [],
-        "summary": "",
+        "topic_summary": "",
         "dialogue": [],
         "host_a_system_prompt": host_a_system_prompt,
         "host_b_system_prompt": host_b_system_prompt,

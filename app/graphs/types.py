@@ -19,8 +19,7 @@ class PodcastState(TypedDict, total=False):
     host_b_history: List[BaseMessage]
 
     # Per-topic context
-    summary: str
-    next_topic: str
+    topic_summary: str
 
     # Output dialogue
     dialogue: List[Dict[str, str]]

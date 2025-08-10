@@ -10,7 +10,7 @@ class Settings:
     # Podcast Settings
     PODCAST_NAME: str = os.getenv("PODCAST_NAME", "Tech Show")
     HOST_A_VOICE: str = os.getenv("HOST_A_VOICE", "expresso/ex03-ex01_happy_001_channel1_334s.wav")
-    HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "expresso/ex01-ex02_default_001_channel2_198s.wav")
+    HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "expresso/ex04-ex01_narration_001_channel1_605s.wav")
     HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Kevin")
     HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Kate")
     HOST_A_TEMPERATURE: float = float(os.getenv("HOST_A_TEMPERATURE", "0.7"))
@@ -23,13 +23,7 @@ class Settings:
         True: """Welcome the listeners to the podcast.
         Introduce yourself, then stop and offer the co-host to introduce themselves""",
         False: """Smoothly transition to the new podcast topic from the previous topic in a natural way.
-        Give a high level over of the topic then begin discussing it in-depth"""
-    }
-    OUTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
-        True: "End the podcast with a natural wrap-up, thanking the audience for tuning in, and each host says their goodbyes.",
-        False: """DO NOT include any sort of outro segment, assume the podcast is moving onto the next topic,
-        For example "Ok, let move ontop the next topic" [STOP HERE]
-        """
+        Do not abruptly stop the current discussion with the co-host, finish it gracefully then introduce the new topic of discussion"""
     }
 
     # LLM Settings
@@ -184,6 +178,7 @@ $HOST_PERSONALITY
 
 # Guidelines
 1. **Content Delivery**:
+    - Keep the conversation relevant to the topic!
     - Never output XML tags or it's content
     - Keep the focus on the provided current <topic>
     - Educate the listeners about the current <topic>

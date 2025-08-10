@@ -15,12 +15,17 @@ def render_instruction_block(instruction: str) -> str:
     return render_xml_block("instruction", instruction)
 
 
-def compose_prompt_with_optional_instruction(
+def compose_prompt_with_topic_instruction(
     base_text: str,
+    topic: Optional[str] = None,
     instruction: Optional[str] = None,
 ) -> str:
+    result = base_text
     if instruction:
-        return f"{render_instruction_block(instruction)}\n\n{base_text}".strip()
-    return base_text
+        return f"{render_instruction_block(instruction)}\n\n{result}".strip()
+    if topic:
+        return f"{render_topic_block(topic)}\n\n{result}".strip()
+    
+    return result
 
 

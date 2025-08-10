@@ -7,7 +7,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 
 from app.config.settings import settings
 from app.graphs.types import PodcastState, Speaker
-from app.graphs.xml_utils import render_topic_block, render_instruction_block, compose_prompt_with_optional_instruction
+from app.graphs.xml_utils import compose_prompt_with_topic_instruction
 from app.graphs.llm_utils import create_llm, invoke_llm
 from app.progress import increment_progress
 
@@ -27,15 +27,12 @@ def _select_route_for_speaker(state: PodcastState) -> Tuple[Speaker, str, list, 
 def _apply_llm_turn(
     state: PodcastState,
     user_text: str,
-    *,
-    increment_exchange: bool,
 ) -> PodcastState:
     """
     Shared logic for a single turn:
     - Route to correct system prompt/history by current speaker
     - Invoke LLM
     - Update history and dialogue
-    - Optionally increment progress and exchange index
     - Flip speaker and set last_content
     """
     current_speaker, system_prompt, history, history_key = _select_route_for_speaker(state)
@@ -63,89 +60,63 @@ def _apply_llm_turn(
         "current_speaker": next_speaker,
         "last_content": content,
     }
-    if increment_exchange:
-        result["exchange_index"] = state.get("exchange_index", 0) + 1
-        # Update progress centrally
-        job_id = state.get("job_id")
-        if job_id:
-            increment_progress(job_id, state.get("progress_increment", 0.0))
+
+    result["exchange_index"] = state.get("exchange_index", 0) + 1
+    # Update progress centrally
+    job_id = state.get("job_id")
+    if job_id:
+        increment_progress(job_id, state.get("progress_increment", 0.0))
     return result
 
 
 # --- Nodes ---------------------------------------------------------------------------------------
 
-def start_topic(state: PodcastState) -> PodcastState:
-    from app.graphs.llm_utils import next_topic_summary, summarize_topic
+def prepare_topic(state: PodcastState) -> PodcastState:
+    from app.graphs.llm_utils import summarize_topic
     topics = state["topics"]
     i = state.get("topic_index", 0)
-    summary = summarize_topic(topics[i], _llm)
-    new_state: PodcastState = {"summary": summary, "exchange_index": 0}
-    if i+1 < len(topics):
-        next_topic = next_topic_summary(topics[i+1], _llm)
-        new_state["next_topic"] = next_topic
+    topic_summary = summarize_topic(topics[i], _llm)
+    new_state: PodcastState = {"topic_summary": topic_summary, "exchange_index": 0}
     return new_state
 
-
-def first_response(state: PodcastState) -> PodcastState:
+def chat_exchange(state: PodcastState) -> PodcastState:
     i = state["topic_index"]
     is_first_topic = i == 0
-    context = (
-        f"{render_topic_block(state['summary'])}\n\n"
-        f"{render_instruction_block(settings.INTRO_SEGMENT_INSTRUCTIONS[is_first_topic])}"
-    )
-
-    # Do not advance progress or exchange index on the first response
-    return _apply_llm_turn(
-        state,
-        context,
-        increment_exchange=False,
-    )
-
-
-def next_exchange(state: PodcastState) -> PodcastState:
-    i = state["topic_index"]
-    j = state.get("exchange_index", 0)
-    next_topic = state.get("next_topic", "")
+    is_last_topic = i == len(state["topics"]) -1
+    exchange_index = state.get("exchange_index", 0)
     num_exchanges = state["exchanges_per_topic"][i]
 
     # Build content for this turn
     content_seed = state.get("last_content", "")
     instruction: Optional[str] = None
+    topic: Optional[str] = None
 
-    # First exchange on very first topic: explicit self-intro
-    if i == 0 and j == 0:
+    # First chat exchange, add the topic and intro
+    if exchange_index == 0:
+        topic = state['topic_summary']
+        instruction = settings.INTRO_SEGMENT_INSTRUCTIONS[is_first_topic]
+
+    if i == 0 and exchange_index == 1:
         instruction = "Introduce yourself to the listeners"
 
     # Last exchange of this topic: add closing instruction
-    if j >= (num_exchanges - 2):
-        if i == (len(state["topics"]) - 1):
-            instruction = """
-                "The podcast is ending now, say your goodbyes and thank the audience for tuning in."
-            """.strip()
-        else:
-            instruction = f"""
-            Naturally end this conversation about the current topic. You will be given the next topic to
-            cover in the next instruction. Do not make up the next topic; be ambiguous. Say something like
-            "alright, it's time to move onto another topic" in a natural way.
+    if is_last_topic and exchange_index >= (num_exchanges - 2):
+        instruction = "The podcast is ending now, say your goodbyes and thank the audience for tuning in."
 
-            Next topic summary: {next_topic}
-            """.strip()
-
-    chat_content = compose_prompt_with_optional_instruction(content_seed, instruction)
+    chat_content = compose_prompt_with_topic_instruction(content_seed, topic, instruction)
 
     # Exchanges should count towards progress, and advance the exchange index by 1
     return _apply_llm_turn(
         state,
         chat_content,
-        increment_exchange=True,
     )
 
 
-def should_continue_exchange(state: PodcastState) -> Literal["next_exchange", "finish_topic"]:
+def should_continue_exchange(state: PodcastState) -> Literal["chat_exchange", "finish_topic"]:
     i = state["topic_index"]
     j = state.get("exchange_index", 0)
     num_exchanges = state["exchanges_per_topic"][i]
-    return "next_exchange" if j < num_exchanges else "finish_topic"
+    return "chat_exchange" if j < num_exchanges else "finish_topic"
 
 
 def finish_topic(state: PodcastState) -> PodcastState:
@@ -155,9 +126,9 @@ def finish_topic(state: PodcastState) -> PodcastState:
     }
 
 
-def has_more_topics(state: PodcastState) -> Literal["start_topic", "end"]:
+def has_more_topics(state: PodcastState) -> Literal["prepare_topic", "end"]:
     if state["topic_index"] < len(state["topics"]):
-        return "start_topic"
+        return "prepare_topic"
     return "end"
 
 
