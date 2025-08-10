@@ -10,7 +10,7 @@ class Settings:
     # Podcast Settings
     PODCAST_NAME: str = os.getenv("PODCAST_NAME", "Tech Show")
     HOST_A_VOICE: str = os.getenv("HOST_A_VOICE", "expresso/ex03-ex01_happy_001_channel1_334s.wav")
-    HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "expresso/ex04-ex03_fast_001_channel1_208s.wav")
+    HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "vctk/p231_023.wav")
     HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Kevin")
     HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Kate")
     HOST_A_TEMPERATURE: float = float(os.getenv("HOST_A_TEMPERATURE", "0.7"))
