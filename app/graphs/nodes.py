@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 
 from typing import Literal, Optional, Tuple
 
@@ -40,6 +41,9 @@ def _apply_llm_turn(
     current_speaker, system_prompt, history, history_key = _select_route_for_speaker(state)
 
     content = invoke_llm(system_prompt, history, user_text, _llm)
+
+    # Remove any XML tagged content
+    content = re.sub(r'<.*?>.*?</.*?>', '', content, flags=re.DOTALL).strip()
 
     # Update history and dialogue
     history.append(HumanMessage(content=user_text))
