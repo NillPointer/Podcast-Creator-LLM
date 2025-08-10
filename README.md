@@ -2,6 +2,8 @@
 
 A tool that converts PDF content into a 2-host podcast using LLM and TTS APIs.
 
+![Podcast Generator Screenshot](images/podcast-generator.jpeg)
+
 ## Overview
 
 Podcast Creator is a comprehensive solution for transforming PDF documents and Arxiv papers into engaging, two-host podcasts. It leverages advanced LLM (Large Language Model) and TTS (Text-to-Speech) technologies to generate natural-sounding conversations between virtual hosts. The system is designed for easy deployment and integration, with a robust HTTP API interface.
@@ -14,6 +16,13 @@ Podcast Creator is a comprehensive solution for transforming PDF documents and A
 - WAV audio stitching for seamless podcast creation
 - Dockerized deployment for easy setup and scaling
 - HTTP API interface for programmatic access
+- Configuration via environment variables
+
+## Planned Features
+
+- Agentic LLM tool-use for information retrieval (e.g. date, web search, etc) for more relevant and up to date information for the podcast
+- Updated UI/Frontend with more configurations exposed to control podcast generation
+- Memory integration to support retrieval from "previous episodes", developed host personalities, likes/dislikes, etc
 
 ## Available Endpoints
 
