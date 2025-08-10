@@ -21,9 +21,9 @@ class Settings:
     HOST_B_CFG: float = float(os.getenv("HOST_B_CFG", "0.3"))
     INTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
         True: """Welcome the listeners to the podcast.
-        Introduce yourself, then stop and offer the co-host to introduce themselves""",
+Introduce yourself, then stop and offer the co-host to introduce themselves""",
         False: """Smoothly transition to the new podcast topic from the previous topic in a natural way.
-        Do not abruptly stop the current discussion with the co-host, finish it gracefully then introduce the new topic of discussion"""
+Do not abruptly stop the current discussion with the co-host, finish it gracefully then introduce the new topic of discussion"""
     }
 
     # LLM Settings
@@ -76,7 +76,7 @@ Your summaries should:
 6. **Tone and Style**
     - Match the tone of the original document (e.g., academic, technical, journalistic).
     - Use active voice for clarity but retain passive voice if it's the document's style.   
-"""
+""".strip()
     )
 
     HOST_A_PERSONALITY: str = """
@@ -89,7 +89,7 @@ Your summaries should:
         - Reacts enthusiastically (“Oh, that's wild!”, “That makes sense actually…”) but not overly optimistically 
         - Rarely goes off-topic unless provoked, but when they do, it's surprisingly funny
     - Looks at the topic from a realistic point of view, not overly optimistic but not pessimistic either
-    """
+    """.strip()
 
     HOST_B_PERSONALITY: str = """
     - Likes technology but tries to poke holes and find flaws in claims to further discussion
@@ -101,7 +101,7 @@ Your summaries should:
         - Tends to push back on hype or overconfidence
         - Naturally segues into personal stories or pop culture references
     - Often challenges the co-hosts's viewpoint with sound and valid arguments
-    """
+    """.strip()
 
     # HOST_A Podcast Prompt
     HOST_PODCAST_PROMPT: str = os.getenv(
@@ -198,7 +198,7 @@ $HOST_PERSONALITY
 # Output
 - Only output what you, $HOST_NAME, would say next.
 - NEVER include $COHOST_NAME's dialogue or XML in your response.
-"""
+""".strip()
     )
 
     # Audio Settings

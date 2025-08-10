@@ -20,11 +20,11 @@ def compose_prompt_with_topic_instruction(
     topic: Optional[str] = None,
     instruction: Optional[str] = None,
 ) -> str:
-    result = base_text
+    result = base_text.strip()
     if instruction:
-        return f"{render_instruction_block(instruction)}\n\n{result}".strip()
+        result = f"{render_instruction_block(instruction)}\n\n{result}".strip()
     if topic:
-        return f"{render_topic_block(topic)}\n\n{result}".strip()
+        result = f"{render_topic_block(topic)}\n\n{result}".strip()
     
     return result
 

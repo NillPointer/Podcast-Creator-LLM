@@ -109,8 +109,6 @@ def chat_exchange(state: PodcastState) -> PodcastState:
 
     chat_content = compose_prompt_with_topic_instruction(content_seed, topic, instruction)
 
-    logger.info(f"Chat Content: {chat_content}")
-
     # Exchanges should count towards progress, and advance the exchange index by 1
     return _apply_llm_turn(
         state,
