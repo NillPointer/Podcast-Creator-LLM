@@ -28,6 +28,10 @@ def create_llm() -> ChatOpenAI:
         base_url=base_url,
         timeout=float(settings.LLM_TIMEOUT),
         max_retries=1,
+        extra_body = {
+            "frequency_penalty": 1.5,
+            "presence_penalty": 1.5
+        }
     )
 
 

@@ -9,8 +9,8 @@ class Settings:
 
     # Podcast Settings
     PODCAST_NAME: str = os.getenv("PODCAST_NAME", "Tech Show")
-    HOST_A_VOICE: str = os.getenv("HOST_A_VOICE", "podcaster_m_1.wav")
-    HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "podcaster_f_1.wav")
+    HOST_A_VOICE: str = os.getenv("HOST_A_VOICE", "expresso/ex03-ex01_happy_001_channel1_334s.wav")
+    HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "expresso/ex04-ex02_happy_001_channel2_140s.wav")
     HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Kevin")
     HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Kate")
     HOST_A_TEMPERATURE: float = float(os.getenv("HOST_A_TEMPERATURE", "0.7"))
@@ -177,44 +177,39 @@ Hmm, well I'm not so sure this is all a good thing
 # Your Personality
 $HOST_PERSONALITY
 
+# Podcast Structure
+1. Intro segment
+2. Summarize the topic to the listeners, giving a high level overview
+3. Discuss the topic with the co-host, sharing thoughts, ideas and opinions
+4. Continue discussin the given topic until new topic is provided with <topic> or new <instruction> comes in
+5. After <instruction> to end podcast, end the podcast with a goodbye and a thank you
+
 # Guidelines
-1. **Behavior**:
-    - Interrupt $COHOST_NAME if it fits the rhythm. Real podcasts aren't polite debates.
-        - e.g., "Hold on—you're saying that passed peer review?"
-    - Throw in personal tangents or reactions
-    - Occasionally go off-topic, especially to weave in everyday life moments or recent social trends/issues
-        - Example of good off-topic segue: "This is actually similar to how current systems work..."
-    - AVOID repetition of jokes or phrases! This is important as audiences of the podcast will pick up on that!
-    - Push back occasionally—disagreement is engaging.
-        - You shouldn't always agree with the co-host, offer differing views but back it up with good argument and reason
-2. **Content Delivery**:
+1. **Content Delivery**:
+    - Give a good overview of the topic to discuss to the audience
     - Your audience is tech-savvy. No need to explain common tech terms (e.g., APIs, machine learning basics).
-    - Only explain complex, novel, or niche ideas. Do it conversationally.
-    - No lectures. Keep it dynamic: 50% insight, 50% fun.
+    - Provide explainations and topic coverage conversationally.
+    - Keep it dynamic: 70% insight, 30% fun.
 3. **Language Style**:
     - Avoid similes like “It's like…” unless totally necessary.
+    - Avoid "But here's the thing" and "That's the million dollar question" phrases
     - Use contractions: don't, isn't, we're, etc.
     - Stay relaxed. Use natural phrasing, short punchy lines, or thoughtful pauses.
     - Include:
         - Realistic back-and-forth
         - Thoughtful pauses using punctuation like: ., ..., ,
-        - Follow-up questions and spontaneous tangents
-
-# Do NOT respond with
-- "But seriously!"
-- "Exactly!"
-- "But in all seriousness"
+        - Follow-up questions
 
 # Output
-- Only output ONE sentence of what you, $HOST_NAME, would say next.
-- NEVER include $COHOST_NAME's dialogue or actions in your response.
+- Only output what you, $HOST_NAME, would say next.
+- NEVER include $COHOST_NAME's dialogue or XML in your response.
 """
     )
 
     # Audio Settings
-    TTS_API_HOST: str = os.getenv("TTS_API_HOST", "http://192.168.1.16:11111")
-    TTS_API_PATH: str = os.getenv("TTS_API_PATH", "/tts") #Use /v1/audio/speech for OpenAI-Compatible Endpoint
-    TTS_MODEL: str = os.getenv("TTS_MODEL", "Chatterbox-TTS-Server")
+    TTS_API_HOST: str = os.getenv("TTS_API_HOST", "http://192.168.1.16:8000")
+    TTS_API_PATH: str = os.getenv("TTS_API_PATH", "/v1/audio/speech") 
+    TTS_MODEL: str = os.getenv("TTS_MODEL", "Kyutai-TTS-Server")
     TTS_TIMEOUT: int = int(os.getenv("TTS_TIMEOUT", "60"))
     TTS_WAKEUP_ENDPOINT: str = os.getenv("TTS_WAKEUP_ENDPOINT")
 
