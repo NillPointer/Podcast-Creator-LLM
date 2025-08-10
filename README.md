@@ -11,7 +11,7 @@ Podcast Creator is a comprehensive solution for transforming PDF documents and A
 - PDF content extraction from uploaded files and Arxiv URLs
 - LLM-powered podcast generation in a 2-host format with natural conversation flow
 - OpenAI-compatible LLM and TTS integration
-- MP3 audio stitching for seamless podcast creation
+- WAV audio stitching for seamless podcast creation
 - Dockerized deployment for easy setup and scaling
 - HTTP API interface for programmatic access
 
@@ -23,10 +23,8 @@ Podcast Creator is a comprehensive solution for transforming PDF documents and A
 Initiates podcast generation from PDF files or Arxiv URLs.
 
 **Request Parameters:**
-- `files` (optional): List of PDF files to process
-- `arxiv_urls` (optional): List of Arxiv URLs to process
-- `speaker_a_name` (optional): Name for host A (default: from env vars)
-- `speaker_b_name` (optional): Name for host B (default: from env vars)
+- `files` (optional if arxiv_urls exists): List of PDF files to process
+- `arxiv_urls` (optional if files exists): List of Arxiv URLs to process
 
 **Response:**
 ```json
@@ -71,19 +69,19 @@ The following environment variables can be configured:
 - `ALLOWED_ORIGINS`: Comma-separated list of allowed origins for CORS (default: `*`)
 
 ### Podcast Settings
-- `HOST_A_NAME`: Name for speaker A (default: "Jeremiah")
-- `HOST_B_NAME`: Name for speaker B (default: "Alexander")
+- `HOST_A_NAME`: Name for speaker A
+- `HOST_B_NAME`: Name for speaker B
 
 ### LLM Settings
 - `LLM_API_HOST`: URL for the LLM service (default: "http://192.168.1.16:8000")
-- `LLM_MODEL`: LLM model to use (default: "Devstral-Small-1.1-FP8")
-- `LLM_TEMPERATURE`: Temperature setting for LLM (default: 0.15)
+- `LLM_MODEL`: LLM model to use (default: "Mistral-Small-3.2-FP8")
+- `LLM_TEMPERATURE`: Temperature setting for LLM (default: 0.6)
 - `LLM_TIMEOUT`: Timeout for LLM requests in seconds (default: 600)
 
 ### TTS Settings
 - `TTS_API_HOST`: URL for the TTS service (default: "http://192.168.1.16:8000")
-- `TTS_API_PATH`: API path (default: "/tts"), use "/v1/audio/speech" for OpenAI-Compatible endpoint
-- `TTS_MODEL`: TTS model to use (default: "Chatterbox-TTS-Server")
+- `TTS_API_PATH`: API path (default: "/v1/audio/speech")
+- `TTS_MODEL`: TTS model to use (default: "Kyutai-TTS-Server")
 - `TTS_TIMEOUT`: Timeout for TTS requests in seconds (default: 60)
 - `TTS_WAKEUP_ENDPOINT`: (Optional) API ENDPOINT that will call a GET with 60 second timeout to "wake up the server"
 
