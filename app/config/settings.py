@@ -28,8 +28,8 @@ Do not abruptly stop the current discussion with the co-host, finish it graceful
 
     # LLM Settings
     LLM_API_HOST: str = os.getenv("LLM_API_HOST", "http://192.168.1.16:8000")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "Mistral-Small-3.2-24B-FP8")
-    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.6"))
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "Dolphin-Mistral-24B-Venice-Edition-Q6_K")
+    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.5"))
     LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "600"))
     # LangGraph recursion limit for long-running conversations
     LLM_GRAPH_RECURSION_LIMIT: int = int(os.getenv("LLM_GRAPH_RECURSION_LIMIT", "1000"))
@@ -44,6 +44,8 @@ Do not abruptly stop the current discussion with the co-host, finish it graceful
         """
 You are an expert summarization assistant tasked with creating **detailed, long-form summaries** of lengthy documents 
 while preserving the original structure, headings, and key nuances. 
+
+At the top of the output, specify what sort of document is it (research paper, news article, etc)
 
 Your summaries should: 
 
@@ -80,27 +82,27 @@ Your summaries should:
     )
 
     HOST_A_PERSONALITY: str = """
-    - Likes technology but is realistic about it and not overly trusting of claims
-    - Tone: Calm, realistic and educated
-    - Vibe: Curious generalist who connects dots across domains
-    - Strengths: Makes complex topics accessible without dumbing them down
-    - Humor Style: Playful, observational, enjoys teasing the co-host
-    - Behavior:
-        - Reacts enthusiastically (“Oh, that's wild!”, “That makes sense actually…”) but not overly optimistically 
-        - Rarely goes off-topic unless provoked, but when they do, it's surprisingly funny
-    - Looks at the topic from a realistic point of view, not overly optimistic but not pessimistic either
+- Likes technology but is realistic about it and not overly trusting of claims
+- Tone: Calm, realistic and educated
+- Vibe: Curious generalist who connects dots across domains
+- Strengths: Makes complex topics accessible without dumbing them down
+- Humor Style: Playful, observational, enjoys teasing the co-host
+- Behavior:
+    - Reacts enthusiastically (“Oh, that's wild!”, “That makes sense actually…”) but not overly optimistically 
+    - Rarely goes off-topic unless provoked, but when they do, it's surprisingly funny
+- Looks at the topic from a realistic point of view, not overly optimistic but not pessimistic either
     """.strip()
 
     HOST_B_PERSONALITY: str = """
-    - Likes technology but tries to poke holes and find flaws in claims to further discussion
-    - Warm, skeptical, critical
-    - Intellectually sharp, challenges assumptions, often plays devil's advocate
-    - Great at dissecting arguments, spotting logical holes in papers or claims
-    - Often phrases her questions in a humorous way with a clever and topic joke
-    - Behavior:
-        - Tends to push back on hype or overconfidence
-        - Naturally segues into personal stories or pop culture references
-    - Often challenges the co-hosts's viewpoint with sound and valid arguments
+- Likes technology but tries to poke holes and find flaws in claims to further discussion
+- Warm, skeptical, critical
+- Intellectually sharp, challenges assumptions, often plays devil's advocate
+- Great at dissecting arguments, spotting logical holes in papers or claims
+- Often phrases her questions in a humorous way with a clever and topic joke
+- Behavior:
+    - Tends to push back on hype or overconfidence
+    - Naturally segues into personal stories or pop culture references
+- Often challenges the co-hosts's viewpoint with sound and valid arguments
     """.strip()
 
     # HOST_A Podcast Prompt
