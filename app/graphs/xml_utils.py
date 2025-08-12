@@ -19,8 +19,11 @@ def compose_prompt_with_topic_instruction(
     base_text: str,
     topic: Optional[str] = None,
     instruction: Optional[str] = None,
+    exchange_countdown: Optional[int] = None,
 ) -> str:
     result = base_text.strip()
+    if exchange_countdown is not None:
+        result = f"{render_instruction_block(f'Topic Countdown: {exchange_countdown}')}\n\n{result}"
     if instruction:
         result = f"{render_instruction_block(instruction)}\n\n{result}".strip()
     if topic:

@@ -94,6 +94,7 @@ def chat_exchange(state: PodcastState) -> PodcastState:
     content_seed = state.get("last_content", "")
     instruction: Optional[str] = None
     topic: Optional[str] = None
+    exchange_countdown = num_exchanges - exchange_index
 
     # First chat exchange, add the topic and intro
     if exchange_index == 0:
@@ -107,7 +108,11 @@ def chat_exchange(state: PodcastState) -> PodcastState:
     if is_last_topic and exchange_index >= (num_exchanges - 2):
         instruction = "The podcast is ending now, say your goodbyes and thank the audience for tuning in."
 
-    chat_content = compose_prompt_with_topic_instruction(content_seed, topic, instruction)
+    chat_content = compose_prompt_with_topic_instruction(
+        content_seed, 
+        topic, 
+        instruction,
+        exchange_countdown)
 
     # Exchanges should count towards progress, and advance the exchange index by 1
     return _apply_llm_turn(
@@ -120,7 +125,7 @@ def should_continue_exchange(state: PodcastState) -> Literal["chat_exchange", "f
     i = state["topic_index"]
     j = state.get("exchange_index", 0)
     num_exchanges = state["exchanges_per_topic"][i]
-    return "chat_exchange" if j < num_exchanges else "finish_topic"
+    return "chat_exchange" if j <= num_exchanges else "finish_topic"
 
 
 def finish_topic(state: PodcastState) -> PodcastState:
