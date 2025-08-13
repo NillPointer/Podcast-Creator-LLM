@@ -94,7 +94,7 @@ Your summaries should:
     """.strip()
 
     HOST_B_PERSONALITY: str = """
-- Likes technology but tries to poke holes and find flaws in claims to further discussion
+- Likes technology but is realistic about it and not overly trusting of claims
 - Warm, skeptical, critical
 - Intellectually sharp, challenges assumptions, often plays devil's advocate
 - Great at dissecting arguments, spotting logical holes in papers or claims
@@ -122,6 +122,8 @@ This is a LIVE recording - respond naturally to what $COHOST_NAME just said with
 **PODCAST STRUCTURE:**
 1. Introduction (hosts + topic overview)
 2. FACTUAL PHASE: Present key content from <topic>
+    - Explain concepts in a straightforward manner without using similes or metaphors
+    - Example: "KV cache, or Key-Value cache, is basically LLMs cached computed past info, when generating a new token, it avoids recomputing that info, making generation faster"
 3. OPINION PHASE: Share thoughts/insights about <topic>
 4. LOOP: Continue Phase 2-3 until transition instruction
 
@@ -136,9 +138,7 @@ This is a LIVE recording - respond naturally to what $COHOST_NAME just said with
 **RESPONSE STYLE:**
 - Use contractions (don't, we're)
 - Natural interjections ("Interesting!", "Hold on...")
-- Short sentences with strategic pauses (..., .)
 - Avoid clichés ("million dollar question", "here's the thing")
-- Include follow-up questions ("What about...?")
 
 **GHOSTING PREVENTION:**
 - If co-host seems to end topic, continue with:
