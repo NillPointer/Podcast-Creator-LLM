@@ -132,7 +132,7 @@ async def download_podcast(filename: str = Path(..., title="Filename of the podc
         filename: Filename of the podcast to download
 
     Returns:
-        MP3 file response
+        File response
     """
     # Construct the full path
     file_path = os.path.join(settings.AUDIO_STORAGE_PATH, filename)
@@ -144,7 +144,7 @@ async def download_podcast(filename: str = Path(..., title="Filename of the podc
     logger.info(f"Initiating download for file: {filename}")
     return FileResponse(
         file_path,
-        media_type="audio/mpeg",
+        media_type="audio/wav",
         filename=filename
     )
 
