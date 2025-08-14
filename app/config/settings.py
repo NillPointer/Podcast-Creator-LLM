@@ -179,6 +179,9 @@ But does it actually solve real-world problems yet?
     TTS_TIMEOUT: int = int(os.getenv("TTS_TIMEOUT", "60"))
     TTS_WAKEUP_ENDPOINT: str = os.getenv("TTS_WAKEUP_ENDPOINT")
 
+    # Using Kyutai-TTS-Server, it supports single API call for multi-voice dialogue generation
+    TTS_USE_MUTLI_VOICE: bool = os.getenv("TTS_USE_MULTI_VOICE", "True").lower() in ['true']
+
     AUDIO_STORAGE_PATH: str = os.getenv("AUDIO_STORAGE_PATH", "./audio_storage")
     MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", "10485760"))  # 10MB default
     MAX_CHARACTER_SIZE: int = int(os.getenv("MAX_CHARACTER_SIZE", "92000")) # Max characters for LLM processing

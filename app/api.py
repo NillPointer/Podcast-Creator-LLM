@@ -238,8 +238,6 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
                 jobs[job_id]["status"] = "failed"
                 raise ValueError("No valid sources provided for processing")
 
-            all_audio_files = []  # Will store all audio segments from all sources
-
             # Initialize PDF processor
             pdf_processor = PDFProcessor()
 
@@ -282,15 +280,14 @@ def process_podcast_job(job_id: str, file_contents: List[bytes], arxiv_urls: Lis
                 job_id,
                 tmpdirname,
             )
-            logger.debug(f"Successfully generated audio for source {index + 1}/{total_sources} for job: {job_id}")
-            all_audio_files.extend(audio_files)
+            logger.debug(f"Successfully generated audio for job: {job_id}")
 
             # Step 4: Stitch all audio segments into final output
             logger.info(f"Stitching all audio segments for job: {job_id}")
             stitcher = AudioStitcher()
             output_filename = f"podcast_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M')}.wav"
             output_file = stitcher.stitch_audio_segments(
-                all_audio_files, output_filename
+                audio_files, output_filename
             )
             logger.info(f"Successfully stitched all audio segments for job: {job_id}")
 
