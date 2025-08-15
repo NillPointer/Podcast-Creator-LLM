@@ -188,7 +188,7 @@ class TTSClient:
                     f.write(response.content)
 
             audio_files.append(filepath)
-            if job_id and progress_increment:
+            if job_id:
                 increment_progress(job_id, 40)
 
         except requests.exceptions.RequestException as e:
