@@ -125,7 +125,7 @@ def should_continue_exchange(state: PodcastState) -> Literal["chat_exchange", "f
     i = state["topic_index"]
     j = state.get("exchange_index", 0)
     num_exchanges = state["exchanges_per_topic"][i]
-    return "chat_exchange" if j <= num_exchanges else "finish_topic"
+    return "chat_exchange" if j < num_exchanges else "finish_topic"
 
 
 def finish_topic(state: PodcastState) -> PodcastState:
