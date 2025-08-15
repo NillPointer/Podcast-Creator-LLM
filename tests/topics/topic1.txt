@@ -1,0 +1,11 @@
+## "Understanding Gender Bias in AI-Generated Product Descriptions"
+
+### **Document Type**: Research Paper
+
+### **1. Introduction**
+The research paper investigates the potential for bias or harm in AI-generated product descriptions, a topic that has not been extensively explored despite the growing use of large language models (LLMs) in e-commerce. The study aims to address this gap by performing a systematic investigation of bias in AI-generated product descriptions using a real-world dataset of 10,000 AI-generated product descriptions from eBay.
+
+The paper outlines a methodology for identifying and characterizing domain-specific manifestations of algorithmic bias. The authors develop taxonomic categories for gender bias in AI-generated product descriptions, providing illustrative examples of how these forms of bias can manifest and corresponding quantitative results. The study also discusses insights and considerations for developing responsible AI approaches in digital marketplaces and associated domains.
+
+### **6. Conclusion**
+The paper concludes by summarizing the key contributions of the study. The authors propose a process for identifying and characterizing different categories of bias for a particular LLM application. Following this process, their work investigates gender bias in product description generation, finding that AI-generated product descriptions commonly include exclusionary norms about body size, tend to over-emphasize appearance in descriptions for women’s clothing items, and demonstrate systematic disparities in persuasion. The authors anticipate that these findings will help inform model design and evaluation for product description generation and spark a wider conversation about responsible AI for e-commerce.

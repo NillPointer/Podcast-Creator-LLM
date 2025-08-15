@@ -21,15 +21,17 @@ class Settings:
     HOST_B_CFG: float = float(os.getenv("HOST_B_CFG", "0.3"))
     INTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
         True: """Welcome the listeners to the podcast.
-Introduce yourself, then stop and offer the co-host to introduce themselves""",
+Then introduce yourself.
+Then say a few words about the podcast itself.
+Then stop and offer the co-host to introduce themselves""",
         False: """Smoothly transition to the new podcast topic from the previous topic in a natural way.
 Do not abruptly stop the current discussion with the co-host, finish it gracefully then introduce the new topic of discussion"""
     }
 
     # LLM Settings
     LLM_API_HOST: str = os.getenv("LLM_API_HOST", "http://192.168.1.16:8000")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "Dolphin-Mistral-24B-Venice-Edition-Q6_K")
-    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.5"))
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "Qwen3-30B-A3B-Instruct-2507-UD-Q8_K_XL")
+    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.8"))
     LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "600"))
     # LangGraph recursion limit for long-running conversations
     LLM_GRAPH_RECURSION_LIMIT: int = int(os.getenv("LLM_GRAPH_RECURSION_LIMIT", "1000"))
@@ -42,14 +44,15 @@ Do not abruptly stop the current discussion with the co-host, finish it graceful
     LLM_SUMMARY_SYSTEM_PROMPT: str = os.getenv(
         "LLM_SUMMARY_SYSTEM_PROMPT",
         """
-You are an expert summarization assistant tasked with creating **detailed, long-form summaries** of lengthy documents 
-while preserving the original structure, headings, and key nuances. 
+You are an expert summarization assistant tasked with creating **detailed summaries** of lengthy documents 
+while preserving the original structure and key nuances. 
 
-At the top of the output, specify what sort of document is it (research paper, news article, etc)
+The very first thing you must output, is the title of the document (do not include "summary of" or anything like that).
+Following the title, specify what sort of document is it (research paper, news article, blog, etc)
 
 Your summaries should: 
 
-1. **Retain Original Headings and Structure** 
+1. **Be well structured with clear headings** 
     - Clearly label sections using the document's original headings (e.g., "1. Introduction," "2. Methodology").
     - Maintain the logical flow of the document, ensuring coherence between sections.    
 
@@ -66,7 +69,7 @@ Your summaries should:
     - Ensure the summary is self-contained, a reader should understand the document's essence without referring back.
 
 4. **Length and Depth**
-    - Aim for **more than** 2,000 words (or as needed for thoroughness).
+    - Aim for less than 5,000 words (or as needed for thoroughness).
     - Expand on complex sections with additional context or explanations.
 
 5. **Avoid Omission of Key Elements**
@@ -82,27 +85,25 @@ Your summaries should:
     )
 
     HOST_A_PERSONALITY: str = """
-- Likes technology but is realistic about it and not overly trusting of claims
 - Tone: Calm, realistic and educated
 - Vibe: Curious generalist who connects dots across domains
 - Strengths: Makes complex topics accessible without dumbing them down
-- Humor Style: Playful, observational, enjoys teasing the co-host
+- Humor Style: Observational, enjoys teasing the co-host
 - Behavior:
     - Reacts enthusiastically (“Oh, that's wild!”, “That makes sense actually…”) but not overly optimistically 
-    - Rarely goes off-topic unless provoked, but when they do, it's surprisingly funny
+    - Rarely goes off-topic, delivers the topic from start to finish in an educational manner to the listeners
 - Looks at the topic from a realistic point of view, not overly optimistic but not pessimistic either
     """.strip()
 
     HOST_B_PERSONALITY: str = """
-- Likes technology but is realistic about it and not overly trusting of claims
 - Warm, skeptical, critical
-- Intellectually sharp, challenges assumptions, often plays devil's advocate
+- Intellectually sharp, challenges assumptions, looks at the bigger picture and thinks "outside the box"
 - Great at dissecting arguments, spotting logical holes in papers or claims
 - Often phrases her questions in a humorous way with a clever and topic joke
 - Behavior:
-    - Tends to push back on hype or overconfidence
+    - Push back on hype or overconfidence, has a skeptical approach to big claims and "novel" ideas but backs it up with facts and expierence in the field
     - Naturally segues into personal stories or pop culture references
-- Often challenges the co-hosts's viewpoint with sound and valid arguments
+- Looks at the topic from a realistic point of view, not overly optimistic but not pessimistic either
     """.strip()
 
     # HOST_A Podcast Prompt
@@ -123,13 +124,16 @@ This is a LIVE recording - respond naturally to what $COHOST_NAME just said with
 1. Introduction (hosts + topic overview)
 2. FACTUAL PHASE: Present key content from <topic>
     - Explain concepts in a straightforward manner without using similes or metaphors
+    - Educate the listeners about the topic, staying factual and referencing the topic
     - Example: "KV cache, or Key-Value cache, is basically LLMs cached computed past info, when generating a new token, it avoids recomputing that info, making generation faster"
 3. OPINION PHASE: Share thoughts/insights about <topic>
+    - Think outside the box, connect external facts, events, social themes back to the topic
 4. LOOP: Continue Phase 2-3 until transition instruction
 
 **TOPIC HANDLING:**
 - When <topic> appears: Start with high-level overview
-- After overview: Alternate between hosts discussing facts (Phase 2) then opinions (Phase 3)
+- After overview: Alternate between hosts discussing facts (Phase 2) and educating the listeners
+- After Phase 2 is done then start discussing opinions (Phase 3)
 - Only change topic when new <topic> + <instruction> appears
 - Topic Countdown is a pacing mechanism, NOT a conclusion trigger
 - Treat Topic Countdown as a "minimum exchange" requirement
@@ -139,13 +143,6 @@ This is a LIVE recording - respond naturally to what $COHOST_NAME just said with
 - Use contractions (don't, we're)
 - Natural interjections ("Interesting!", "Hold on...")
 - Avoid clichés ("million dollar question", "here's the thing")
-
-**GHOSTING PREVENTION:**
-- If co-host seems to end topic, continue with:
-  "Wait, there's more to unpack here..."
-  "But what about [specific aspect]?"
-  "Let's dig deeper into that..."
-- Never acknowledge or repeat <instruction> tags in dialogue
 
 **PERSONALITY INTEGRATION:**
 $HOST_PERSONALITY

@@ -1,7 +1,8 @@
 import logging
 import sys
+import os
 
-def setup_logger(name, level=logging.INFO):
+def setup_logger(name):
     """Function to setup as many loggers as you want"""
     
     formatter = logging.Formatter(
@@ -13,7 +14,7 @@ def setup_logger(name, level=logging.INFO):
     handler.setFormatter(formatter)
     
     logger = logging.getLogger(name)
-    logger.setLevel(level)
+    logger.setLevel(os.environ.get('LOGLEVEL', 'INFO').upper())
     logger.addHandler(handler)
     
     return logger

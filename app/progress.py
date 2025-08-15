@@ -15,7 +15,6 @@ jobs: dict[str, dict] = {}
 def increment_progress(job_id: str, increment: float) -> None:
     """Increment job progress and update timestamp."""
     if job_id not in jobs:
-        logger.warning(f"Job not found: {job_id}")
         return
     jobs[job_id]["progress"] = jobs[job_id].get("progress", 0) + float(increment)
     jobs[job_id]["updated_at"] = datetime.now(timezone.utc).isoformat()

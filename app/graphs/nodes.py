@@ -15,8 +15,13 @@ from app.logger import setup_logger
 
 logger = setup_logger("graph_nodes")
 
-
-_llm = create_llm()
+_summarizer_llm = create_llm(temperature=0.3)
+_chat_llm = create_llm(
+    temperature=settings.LLM_TEMPERATURE, 
+    extra_body={
+        "frequency_penalty": 2.0,
+        "presence_penalty": 1.5
+    })
 
 # --- Internal helpers ---------------------------------------------------------
 
@@ -41,7 +46,8 @@ def _apply_llm_turn(
     """
     current_speaker, system_prompt, history, history_key = _select_route_for_speaker(state)
 
-    content = invoke_llm(system_prompt, history, user_text, _llm)
+    content = invoke_llm(system_prompt, history, user_text, _chat_llm)
+    logger.debug(f"Speaker: {'HOST_B' if current_speaker == 'HOST_A' else 'HOST_A'} text: {content}")
 
     # Remove any XML tagged content
     content = re.sub(r'<.*?>.*?</.*?>', '', content, flags=re.DOTALL).strip()
@@ -79,7 +85,7 @@ def prepare_topic(state: PodcastState) -> PodcastState:
     from app.graphs.llm_utils import summarize_topic
     topics = state["topics"]
     i = state.get("topic_index", 0)
-    topic_summary = summarize_topic(topics[i], _llm)
+    topic_summary = summarize_topic(topics[i], _summarizer_llm)
     new_state: PodcastState = {"topic_summary": topic_summary, "exchange_index": 0}
     return new_state
 
@@ -102,11 +108,11 @@ def chat_exchange(state: PodcastState) -> PodcastState:
         instruction = settings.INTRO_SEGMENT_INSTRUCTIONS[is_first_topic]
 
     if i == 0 and exchange_index == 1:
-        instruction = "Introduce yourself to the listeners"
+        instruction = "Humorously  introduce yourself to the listeners, avoid directly stating your personality traits"
 
     # Last exchange of this topic: add closing instruction
     if is_last_topic and exchange_index >= (num_exchanges - 2):
-        instruction = "The podcast is ending now, say your goodbyes and thank the audience for tuning in."
+        instruction = "The podcast is ending now, conclude the current conversation naturally, say your goodbyes and thank the audience for tuning in."
 
     chat_content = compose_prompt_with_topic_instruction(
         content_seed, 

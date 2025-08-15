@@ -8,10 +8,8 @@ def read_topics_from_files(file_paths):
     for file_path in file_paths:
         if os.path.exists(file_path):
             with open(file_path, 'r') as f:
-                for line in f:
-                    stripped = line.strip()
-                    if stripped:
-                        topics.append(stripped)
+                topic: str = f.read()
+                topics.append(topic)
         else:
             print(f"Warning: File {file_path} not found.")
     return topics
@@ -26,6 +24,7 @@ if __name__ == "__main__":
         print("No topics found in provided files.")
         sys.exit(1)
     
+    print(f"Starting LLM Client test with {len(topics)} topics...")
     job_id = "test_run_" + str(int(time.time()))
     client = LLMClient()
     dialogue = client.generate_podcast_script(topics, job_id)
