@@ -15,9 +15,9 @@ from app.logger import setup_logger
 
 logger = setup_logger("graph_nodes")
 
-_summarizer_llm = create_llm(temperature=0.3)
+_summarizer_llm = create_llm(temperature=settings.LLM_SUMMARY_TEMPERATURE)
 _chat_llm = create_llm(
-    temperature=settings.LLM_TEMPERATURE, 
+    temperature=settings.LLM_HOST_TEMPERATURE, 
     extra_body={
         "frequency_penalty": 2.0,
         "presence_penalty": 1.5

@@ -42,6 +42,9 @@ class TTSClient:
             speaker = segment["speaker"]
             text = segment["text"]
 
+            if not text.strip():
+                continue
+
             # Select parameters based on speaker
             voice = settings.HOST_A_VOICE if speaker == "HOST_A" else settings.HOST_B_VOICE
             temperature = settings.HOST_A_TEMPERATURE if speaker == "HOST_A" else settings.HOST_B_TEMPERATURE

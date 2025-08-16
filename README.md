@@ -84,7 +84,7 @@ The following environment variables can be configured:
 ### LLM Settings
 - `LLM_API_HOST`: URL for the LLM service (default: "http://192.168.1.16:8000")
 - `LLM_MODEL`: LLM model to use (default: "Mistral-Small-3.2-FP8")
-- `LLM_TEMPERATURE`: Temperature setting for LLM (default: 0.6)
+- `LLM_HOST_TEMPERATURE`: Temperature setting for LLM (default: 0.6)
 - `LLM_TIMEOUT`: Timeout for LLM requests in seconds (default: 600)
 
 ### TTS Settings

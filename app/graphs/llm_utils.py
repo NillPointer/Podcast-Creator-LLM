@@ -17,7 +17,7 @@ def build_host_system_prompt(host_name: str, cohost_name: str, personality: str)
     return prompt
 
 
-def create_llm(*, temperature: float = settings.LLM_TEMPERATURE, extra_body: Dict = None) -> ChatOpenAI:
+def create_llm(*, temperature: float = 1.0, extra_body: Dict = None) -> ChatOpenAI:
     # Many local OpenAI-compatible servers ignore the API key, but LangChain requires one.
     api_key = os.getenv("OPENAI_API_KEY", "not-needed")
     base_url = f"{settings.LLM_API_HOST}/v1"

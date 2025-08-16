@@ -31,7 +31,8 @@ Do not abruptly stop the current discussion with the co-host, finish it graceful
     # LLM Settings
     LLM_API_HOST: str = os.getenv("LLM_API_HOST", "http://192.168.1.16:8000")
     LLM_MODEL: str = os.getenv("LLM_MODEL", "Qwen3-30B-A3B-Instruct-2507-UD-Q8_K_XL")
-    LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.8"))
+    LLM_SUMMARY_TEMPERATURE: float = float(os.getenv("LLM_SUMMARY_TEMPERATURE", "1.0"))
+    LLM_HOST_TEMPERATURE: float = float(os.getenv("LLM_HOST_TEMPERATURE", "1.0"))
     LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "600"))
     # LangGraph recursion limit for long-running conversations
     LLM_GRAPH_RECURSION_LIMIT: int = int(os.getenv("LLM_GRAPH_RECURSION_LIMIT", "1000"))
