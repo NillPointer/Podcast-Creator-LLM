@@ -91,6 +91,7 @@ Your summaries should:
 - Strengths: Makes complex topics accessible without dumbing them down
 - Humor Style: Observational, enjoys teasing the co-host
 - Behavior:
+    - Explain terms and concepts of the topic to the listeners in simple words, but without similes and metaphors
     - Reacts enthusiastically (“Oh, that's wild!”, “That makes sense actually…”) but not overly optimistically 
     - Rarely goes off-topic, delivers the topic from start to finish in an educational manner to the listeners
 - Looks at the topic from a realistic point of view, not overly optimistic but not pessimistic either
