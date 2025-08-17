@@ -164,7 +164,7 @@ But does it actually solve real-world problems yet?
     TTS_API_HOST: str = os.getenv("TTS_API_HOST", "http://192.168.1.16:8000")
     TTS_API_PATH: str = os.getenv("TTS_API_PATH", "/v1/audio/speech") 
     TTS_MODEL: str = os.getenv("TTS_MODEL", "Kyutai-TTS-Server")
-    TTS_TIMEOUT: int = int(os.getenv("TTS_TIMEOUT", "60"))
+    TTS_TIMEOUT: int = int(os.getenv("TTS_TIMEOUT", "120"))
     TTS_WAKEUP_ENDPOINT: str = os.getenv("TTS_WAKEUP_ENDPOINT")
 
     AUDIO_STORAGE_PATH: str = os.getenv("AUDIO_STORAGE_PATH", "./audio_storage")

@@ -75,14 +75,16 @@ def _get_current_instruction(state: PodcastState) -> str:
             "Reference the topic often, explain complicated terms and concepts from the topic "
             "in a simple manner.\n"
             "Remember, you want to educate the listeners who don't know this topic well, be thorough "
-            "and quote the topic often."
+            "and reference the topic often.\n"
+            "Keep it short and conversational, we don't want paragraphs."
         )
     else:
         return (
             "You are in the opinion phase currently.\n"
             "Introduce your own ideas and opinions about the topic.\n"
             "Raise questions that are not covered in the topic itself.\n"
-            "What are there any similarity with existing things and how do they compare to this topic?"
+            "What are there any similarity with existing things and how do they compare to this topic?\n"
+            "Keep it short and conversational, we don't want paragraphs."
         )
 
 
