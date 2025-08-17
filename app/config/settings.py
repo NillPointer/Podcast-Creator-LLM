@@ -13,33 +13,21 @@ class Settings:
     HOST_B_VOICE: str = os.getenv("HOST_B_VOICE", "expresso/ex04-ex02_sarcastic_001_channel2_466s.wav")
     HOST_A_NAME: str = os.getenv("HOST_A_NAME", "Kevin")
     HOST_B_NAME: str = os.getenv("HOST_B_NAME", "Kate")
-    HOST_A_TEMPERATURE: float = float(os.getenv("HOST_A_TEMPERATURE", "0.7"))
-    HOST_B_TEMPERATURE: float = float(os.getenv("HOST_B_TEMPERATURE", "0.7"))
-    HOST_A_EXAGGERATION: float = float(os.getenv("HOST_A_EXAGGERATION", "0.65"))
-    HOST_B_EXAGGERATION: float = float(os.getenv("HOST_B_EXAGGERATION", "0.65"))
-    HOST_A_CFG: float = float(os.getenv("HOST_A_CFG", "0.3"))
-    HOST_B_CFG: float = float(os.getenv("HOST_B_CFG", "0.3"))
-    INTRO_SEGMENT_INSTRUCTIONS: Dict[bool, str] = {
-        True: """Welcome the listeners to the podcast.
-Then introduce yourself.
-Then say a few words about the podcast itself.
-Then stop and offer the co-host to introduce themselves""",
-        False: """Smoothly transition to the new podcast topic from the previous topic in a natural way.
-Do not abruptly stop the current discussion with the co-host, finish it gracefully then introduce the new topic of discussion"""
-    }
 
     # LLM Settings
     LLM_API_HOST: str = os.getenv("LLM_API_HOST", "http://192.168.1.16:8000")
     LLM_MODEL: str = os.getenv("LLM_MODEL", "Qwen3-30B-A3B-Instruct-2507-UD-Q8_K_XL")
+    
     LLM_SUMMARY_TEMPERATURE: float = float(os.getenv("LLM_SUMMARY_TEMPERATURE", "1.0"))
     LLM_HOST_TEMPERATURE: float = float(os.getenv("LLM_HOST_TEMPERATURE", "1.0"))
+    
     LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "600"))
     # LangGraph recursion limit for long-running conversations
     LLM_GRAPH_RECURSION_LIMIT: int = int(os.getenv("LLM_GRAPH_RECURSION_LIMIT", "1000"))
 
     # Topic exchange settings for alternating host dialogues
-    TOPIC_EXCHANGE_MIN: int = int(os.getenv("TOPIC_EXCHANGE_MIN", "33"))
-    TOPIC_EXCHANGE_MAX: int = int(os.getenv("TOPIC_EXCHANGE_MAX", "37"))
+    TOPIC_EXCHANGE_MIN: int = int(os.getenv("TOPIC_EXCHANGE_MIN", "35"))
+    TOPIC_EXCHANGE_MAX: int = int(os.getenv("TOPIC_EXCHANGE_MAX", "35"))
 
     LLM_SUMMARY_ENABLED: bool = os.getenv("LLM_SUMMARY_ENABLED", "True").lower() in ['true']
     LLM_SUMMARY_SYSTEM_PROMPT: str = os.getenv(
@@ -108,7 +96,7 @@ Your summaries should:
 - Looks at the topic from a realistic point of view, not overly optimistic but not pessimistic either
     """.strip()
 
-    # HOST_A Podcast Prompt
+
     HOST_PODCAST_PROMPT: str = os.getenv(
         "HOST_A_PODCAST_PROMPT",
         f"""

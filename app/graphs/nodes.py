@@ -25,6 +25,67 @@ _chat_llm = create_llm(
 
 # --- Internal helpers ---------------------------------------------------------
 
+# Managing the instructions throughout the podcast lifecycle
+def _get_current_instruction(state: PodcastState) -> str:
+    topic_index = state["topic_index"]
+    exchange_index = state.get("exchange_index", 0)
+    num_exchanges = state["exchanges_per_topic"][i]
+    exchange_percentage = exchange_index / (num_exchanges - 1)
+
+    is_first_exchange = exchange_index == 0
+    is_second_exchange = exchange_index == 1
+    is_first_topic = topic_index == 0
+    is_last_topic = topic_index == len(state["topics"]) -1
+    
+    # First chat exchange, add the topic and intro
+    if is_first_exchange:
+        if is_first_topic:
+            return (
+                "Welcome the listeners to the podcast. "
+                "Then introduce yourself. "
+                "Then say a quip or two about the podcast itself. "
+                "Then stop and offer the co-host to introduce themselves."
+            )
+        else:
+            return (
+                "Smoothly transition to the new podcast topic from "
+                "the previous topic in a natural way. "
+                "Do not abruptly stop the current discussion with the co-host, "
+                "finish it gracefully then introduce the new topic of discussion."
+            )
+
+    if is_first_topic and is_second_exchange:
+        return (
+            "Humorously introduce yourself to the listeners, "
+            "avoid directly stating your personality traits."
+        )
+
+    # Last exchange of this topic: add closing instruction
+    if is_last_topic and exchange_index >= (num_exchanges - 2):
+        return (
+            "The podcast is ending now, "
+            "conclude the current conversation naturally, "
+            "say your goodbyes and thank the audience for tuning in."
+        )
+    
+    if exchange_percentage < 0.7:
+        return (
+            "You are in the factual phase currently.\n"
+            "Focus on explaining the topic to the listeners.\n"
+            "Reference the topic often, explain complicated terms and concepts from the topic "
+            "in a simple manner.\n"
+            "Remember, you want to educate the listeners who don't know this topic well, be thorough "
+            "and quote the topic often."
+        )
+    else:
+        return (
+            "You are in the opinion phase currently.\n"
+            "Introduce your own ideas and opinions about the topic.\n"
+            "Raise questions that are not covered in the topic itself.\n"
+            "What are there any similarity with existing things and how do they compare to this topic?"
+        )
+
+
 def _select_route_for_speaker(state: PodcastState) -> Tuple[Speaker, str, list, str]:
     """Return (current_speaker, system_prompt, history, history_key)."""
     current_speaker: Speaker = state.get("current_speaker", "HOST_A")
@@ -90,9 +151,6 @@ def prepare_topic(state: PodcastState) -> PodcastState:
     return new_state
 
 def chat_exchange(state: PodcastState) -> PodcastState:
-    i = state["topic_index"]
-    is_first_topic = i == 0
-    is_last_topic = i == len(state["topics"]) -1
     exchange_index = state.get("exchange_index", 0)
     num_exchanges = state["exchanges_per_topic"][i]
 
@@ -102,18 +160,12 @@ def chat_exchange(state: PodcastState) -> PodcastState:
     topic: Optional[str] = None
     exchange_countdown = num_exchanges - exchange_index
 
-    # First chat exchange, add the topic and intro
+    instruction = _get_current_instruction(state)
+
+    # First chat exchange, add the topic
     if exchange_index == 0:
         topic = state['topic_summary']
-        instruction = settings.INTRO_SEGMENT_INSTRUCTIONS[is_first_topic]
-
-    if i == 0 and exchange_index == 1:
-        instruction = "Humorously  introduce yourself to the listeners, avoid directly stating your personality traits"
-
-    # Last exchange of this topic: add closing instruction
-    if is_last_topic and exchange_index >= (num_exchanges - 2):
-        instruction = "The podcast is ending now, conclude the current conversation naturally, say your goodbyes and thank the audience for tuning in."
-
+        
     chat_content = compose_prompt_with_topic_instruction(
         content_seed, 
         topic, 

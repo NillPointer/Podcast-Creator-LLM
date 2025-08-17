@@ -47,25 +47,14 @@ class TTSClient:
 
             # Select parameters based on speaker
             voice = settings.HOST_A_VOICE if speaker == "HOST_A" else settings.HOST_B_VOICE
-            temperature = settings.HOST_A_TEMPERATURE if speaker == "HOST_A" else settings.HOST_B_TEMPERATURE
-            exaggeration = settings.HOST_A_EXAGGERATION if speaker == "HOST_A" else settings.HOST_B_EXAGGERATION
-            cfg_weight = settings.HOST_A_CFG if speaker == "HOST_A" else settings.HOST_B_CFG
-
+            
             # Prepare the payload for TTS API
             # Combination between OpenAI payload and TTS payload
             payload = {
                 "model": settings.TTS_MODEL,  # Use configured model
-                "text": text,
                 "input": text,
-                "voice_mode": "predefined",
-                "predefined_voice_id": voice,
                 "voice": voice,
-                "output_format": "wav",
                 "response_format": "wav",
-                "temperature": temperature,
-                "exaggeration": exaggeration,
-                "cfg_weight": cfg_weight,
-                "split_text": False
             }
 
             try:
