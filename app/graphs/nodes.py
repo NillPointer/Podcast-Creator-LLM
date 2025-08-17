@@ -29,7 +29,7 @@ _chat_llm = create_llm(
 def _get_current_instruction(state: PodcastState) -> str:
     topic_index = state["topic_index"]
     exchange_index = state.get("exchange_index", 0)
-    num_exchanges = state["exchanges_per_topic"][exchange_index]
+    num_exchanges = state["exchanges_per_topic"][topic_index]
     exchange_percentage = exchange_index / (num_exchanges - 1)
 
     is_first_exchange = exchange_index == 0
@@ -151,8 +151,9 @@ def prepare_topic(state: PodcastState) -> PodcastState:
     return new_state
 
 def chat_exchange(state: PodcastState) -> PodcastState:
+    topic_index = state["topic_index"]
     exchange_index = state.get("exchange_index", 0)
-    num_exchanges = state["exchanges_per_topic"][i]
+    num_exchanges = state["exchanges_per_topic"][topic_index]
 
     # Build content for this turn
     content_seed = state.get("last_content", "")
