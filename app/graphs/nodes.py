@@ -19,8 +19,8 @@ _summarizer_llm = create_llm(temperature=settings.LLM_SUMMARY_TEMPERATURE)
 _chat_llm = create_llm(
     temperature=settings.LLM_HOST_TEMPERATURE, 
     extra_body={
-        "frequency_penalty": 2.0,
-        "presence_penalty": 1.5
+        "frequency_penalty": 1.5,
+        "presence_penalty": 2.0
     })
 
 # --- Internal helpers ---------------------------------------------------------
