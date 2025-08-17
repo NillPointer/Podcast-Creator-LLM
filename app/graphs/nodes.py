@@ -198,5 +198,3 @@ def has_more_topics(state: PodcastState) -> Literal["prepare_topic", "end"]:
     if state["topic_index"] < len(state["topics"]):
         return "prepare_topic"
     return "end"
-
-
