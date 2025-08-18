@@ -19,7 +19,7 @@ _summarizer_llm = create_llm(temperature=settings.LLM_SUMMARY_TEMPERATURE)
 _chat_llm = create_llm(
     temperature=settings.LLM_HOST_TEMPERATURE, 
     extra_body={
-        "frequency_penalty": 1.5,
+        "frequency_penalty": 1.8,
         "presence_penalty": 2.0
     })
 
@@ -41,15 +41,14 @@ def _get_current_instruction(state: PodcastState) -> str:
     if is_first_exchange:
         if is_first_topic:
             return (
-                "Welcome the listeners to the podcast. "
-                "Then introduce yourself. "
-                "Then say a quip or two about the podcast itself. "
+                "Welcome the listeners to the podcast.\n"
+                "Then introduce yourself.\n"
                 "Then stop and offer the co-host to introduce themselves."
             )
         else:
             return (
                 "Smoothly transition to the new podcast topic from "
-                "the previous topic in a natural way. "
+                "the previous topic in a natural way.\n"
                 "Do not abruptly stop the current discussion with the co-host, "
                 "finish it gracefully then introduce the new topic of discussion."
             )
@@ -68,7 +67,7 @@ def _get_current_instruction(state: PodcastState) -> str:
             "say your goodbyes and thank the audience for tuning in."
         )
     
-    if exchange_percentage < 0.7:
+    if exchange_percentage < 0.55:
         return (
             "You are in the factual phase currently.\n"
             "Focus on explaining the topic to the listeners.\n"
@@ -76,15 +75,16 @@ def _get_current_instruction(state: PodcastState) -> str:
             "in a simple manner.\n"
             "Remember, you want to educate the listeners who don't know this topic well, be thorough "
             "and reference the topic often.\n"
-            "Keep it short and conversational, we don't want paragraphs."
+            "Keep it short (less than 100 words) and conversational."
         )
     else:
         return (
             "You are in the opinion phase currently.\n"
             "Introduce your own ideas and opinions about the topic.\n"
+            "Allow the co-host to repond and comment to what you said. \n"
             "Raise questions that are not covered in the topic itself.\n"
             "What are there any similarity with existing things and how do they compare to this topic?\n"
-            "Keep it short and conversational, we don't want paragraphs."
+            "Keep it short (less than 100 words) and conversational."
         )
 
 
